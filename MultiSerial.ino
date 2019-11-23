@@ -96,8 +96,9 @@ void setup() {
 }
 
 void loop() {    
-  String pos_str = Serial1.read();
-  serial.println(pos_str);
+  String pos_str = Serial1.readString();
+  
+  Serial.println(pos_str);
   // arm.moveServos(6, 1000, 1, J1_deg_to_pos(), 2, J2_deg_to_pos(), 3, J3_deg_to_pos(), 4, J4_deg_to_pos(), 5, J5_deg_to_pos(), 6, J6_deg_to_pos());
   delay(1000);
   // arm.moveServos(4, 1000, 1, J1_deg_to_pos(90), 2, 1000, 3, 1000, 4, 1000);
