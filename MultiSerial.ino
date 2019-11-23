@@ -102,16 +102,16 @@ void loop() {
   int idx_end = length(pos_str);
   int idx_comma = pos_str.indexOf(',', idx_begin);
   float angle6 = pos_str[idx_begin : idx_comma];
-  int idx_begin = idx_comma+1;
-  int idx_comma = pos_str.indexOf(',', idx_begin);
+  idx_begin = idx_comma+1;
+  idx_comma = pos_str.indexOf(',', idx_begin);
   float angle5 = pos_str[idx_begin : idx_comma];
-  int idx_begin = idx_comma+1;
-  int idx_comma = pos_str.indexOf(',', idx_begin);
+  idx_begin = idx_comma+1;
+  idx_comma = pos_str.indexOf(',', idx_begin);
   float angle4 = pos_str[idx_begin : idx_comma];
-  int idx_begin = idx_comma+1;
-  int idx_comma = pos_str.indexOf(',', idx_begin);
+  idx_begin = idx_comma+1;
+  idx_comma = pos_str.indexOf(',', idx_begin);
   float angle3 = pos_str[idx_begin : idx_comma];
-  int idx_begin = idx_comma+1;
+  idx_begin = idx_comma+1;
   float angle2 = pos_str[idx_begin : idx_end];
   // end parse
   Serial.println(pos_str);
