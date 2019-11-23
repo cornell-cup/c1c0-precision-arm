@@ -91,15 +91,19 @@ LobotServoController arm(Serial1);
 
 void setup() {
   Serial1.begin(9600);
-  //Serial.begin(9600);
+  Serial.begin(9600);
   while(!Serial1);
 }
 
 void loop() {    
-  arm.moveServos(4, 1000, 1, J1_deg_to_pos(90), 2, 1000, 3, 1000, 4, 1000);
-  delay(1000); 
-  arm.moveServos(4, 1000, 1, J1_deg_to_pos(0), 2, 1000, 3, 1000, 4, 1000);
+  String pos_str = Serial1.read();
+  serial.println(pos_str);
+  // arm.moveServos(6, 1000, 1, J1_deg_to_pos(), 2, J2_deg_to_pos(), 3, J3_deg_to_pos(), 4, J4_deg_to_pos(), 5, J5_deg_to_pos(), 6, J6_deg_to_pos());
   delay(1000);
+  // arm.moveServos(4, 1000, 1, J1_deg_to_pos(90), 2, 1000, 3, 1000, 4, 1000);
+  // delay(1000); 
+  // arm.moveServos(4, 1000, 1, J1_deg_to_pos(0), 2, 1000, 3, 1000, 4, 1000);
+  // delay(1000);
   //Serial.println(J1_deg_to_pos (90));
   //arm.moveServos(1,2500,2,1000);
   //delay(1000);

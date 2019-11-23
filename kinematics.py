@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import serial
+import sys
 import numpy as np
 from matplotlib import pylab
 from pylab import *
@@ -175,6 +177,10 @@ def kinematics():
     print(tolerance)
     print('Angles')
     print(np.rad2deg(angles))
+
+    point_actual = join(join('%0.3f' %x for x in y) for y in point)
+    ser = serial.Serial('/dev/ttyACM0', 9600)
+    ser.write(point_actual)
 
 # Time taken
 startTime = datetime.now()
