@@ -130,27 +130,32 @@ def IK(angles,e,g,b,alpha,d,r):
 
     return angles,point
 
-def kinematics():
+def kinematics(xg,yg,zg):
 
     # No scientific notations
     np.set_printoptions(suppress=True)
-
+    
     # Given desired location (x,y,g)
-    xg= 2
-    yg= 1
-    zg= 2
     giv_point=np.array([[xg],[yg],[zg]])
     pi = np.pi
 
     # Link sizes - L = [l1,l2,l3,l4]
-    L=np.array([1,1,1,1])
+    #l1 = 0.066675
+    #l2 = 0.104775
+    #l3 = 0.0889
+    #l4 = 0.1778
+    l1 = 1
+    l2 = 1
+    l3 = 1
+    l4 = 1
+    L=np.array([l1,l2,l3,l4])
 
     #current joint angles (radians)
-    angles=np.array([[0],[pi / 2],[0],[0],[0]])
+    angles=np.array([[0],[0],[0],[0],[0]])
     Z=np.array([[0],[- pi / 2],[0],[pi / 2],[0]])
     angles= np.add(angles, Z)
     alpha=np.array([[- pi / 2],[0],[0],[pi / 2],[0]])
-    r=np.array([[0],[L[2]],[L[3]],[0],[0]])
+    r=np.array([[0],[L[1]],[L[2]],[0],[0]])
     d=np.array([[L[0]],[0],[0],[0],[L[3]]])
 
 
@@ -169,6 +174,8 @@ def kinematics():
         angles,point=IK(angles,point,giv_point,b,alpha,d,r)
         error=Dist(point,giv_point)
     
+    angles[3] = angles[3] - pi/2
+    
     print('Desired Location')
     print(giv_point)
     print('Calculated position')
@@ -177,16 +184,20 @@ def kinematics():
     print(tolerance)
     print('Angles')
     print(np.rad2deg(angles))
+    # Correction for convention
+    angles[1] = angles[1] + 5*pi/6
+    angles[2] = -1*angles[2] + pi/4
+    print(np.rad2deg(angles))
 
-    point_actual = join(join('%0.3f' %x for x in y) for y in point)
-    ser = serial.Serial('/dev/ttyACM0', 9600)
-    ser.write(point_actual)
-
+    angles_actual = str().join(','.join('%0.3f' %y for y in np.rad2deg(angles)))
+    ser = serial.Serial('/dev/ttyUSB0', 9600)
+    ser.write(bytearray(angles_actual, 'utf8'))
+    print(bytearray(angles_actual, 'utf8'))
+    ser.close()
 # Time taken
-startTime = datetime.now()
+startTime = datetime .now()
 
 # Call the kinematics function   
-kinematics()
-
+kinematics(1,1,2)      #Claw points straight up (0,0,4)
 print('TIME TAKEN:')
 print(datetime.now() - startTime)
