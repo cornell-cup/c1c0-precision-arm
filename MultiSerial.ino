@@ -139,15 +139,6 @@ void loop() {
 //  Serial.println(angle2);
  
   arm.moveServos(5, 1000, 2, J2_deg_to_pos(angle2), 3, J3_deg_to_pos(angle3), 4, J4_deg_to_pos(angle4), 5, J5_deg_to_pos(angle5), 6, J6_deg_to_pos(angle6));
-  // arm.moveServos(4, 1000, 1, J1_deg_to_pos(90), 2, 1000, 3, 1000, 4, 1000);
-  // delay(1000); 
-  // arm.moveServos(4, 1000, 1, J1_deg_to_pos(0), 2, 1000, 3, 1000, 4, 1000);
-  // delay(1000);
-  //Serial.println(J1_deg_to_pos (90));
-  //arm.moveServos(1,2500,2,1000);
-  //delay(1000);
-  //Serial.println(J1_deg_to_pos (10));
-  //arm.moveServos(1,1500,2,1000);
   delay(1000);
 
   
