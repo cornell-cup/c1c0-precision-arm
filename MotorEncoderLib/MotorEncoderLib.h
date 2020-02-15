@@ -19,6 +19,8 @@ class MotorEncoderLib
 		void setCSLine(uint8_t encoder, uint8_t csLine);
 		void setZeroSPI(uint8_t encoder);
 		void resetAMT22(uint8_t encoder);
+		uint8_t RES12;
+		uint8_t RES14;
 		
 	private: 
 		int _MISO;
@@ -27,8 +29,7 @@ class MotorEncoderLib
 		uint8_t AMT22_NOP;
 		uint8_t AMT22_RESET; 
 		uint8_t AMT22_ZERO;
-		uint8_t RES12;
-		uint8_t RES14;
+
 };
 
 #endif
