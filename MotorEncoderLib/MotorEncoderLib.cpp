@@ -37,7 +37,7 @@ MotorEncoderLib::MotorEncoderLib( )
  * This funciton expects res12 or res14 to properly format position responses.
  * Error values are returned as 0xFFFF
  */
-uint16_t getPositionSPI(uint8_t encoder, uint8_t resolution)
+uint16_t MotorEncoderLib::getPositionSPI(uint8_t encoder, uint8_t resolution)
 {
   uint16_t currentPosition;       //16-bit response from encoder
   bool binaryArray[16];           //after receiving the position we will populate this array and use it for calculating the checksum
@@ -81,7 +81,7 @@ uint16_t getPositionSPI(uint8_t encoder, uint8_t resolution)
  * This function takes the pin number of the desired device as an input
  * The received data is returned.
  */
-uint8_t spiWriteRead(uint8_t sendByte, uint8_t encoder, uint8_t releaseLine)
+uint8_t MotorEncoderLib::spiWriteRead(uint8_t sendByte, uint8_t encoder, uint8_t releaseLine)
 {
   //holder for the received over SPI
   uint8_t data;
@@ -106,7 +106,7 @@ uint8_t spiWriteRead(uint8_t sendByte, uint8_t encoder, uint8_t releaseLine)
  * This function sets the state of the SPI line. It isn't necessary but makes the code more readable than having digitalWrite everywhere 
  * This function takes the pin number of the desired device as an input
  */
-void setCSLine (uint8_t encoder, uint8_t csLine)
+void MotorEncoderLib::setCSLine (uint8_t encoder, uint8_t csLine)
 {
   digitalWrite(encoder, csLine);
 }
@@ -116,7 +116,7 @@ void setCSLine (uint8_t encoder, uint8_t csLine)
  * second byte is the command.  
  * This function takes the pin number of the desired device as an input
  */
-void setZeroSPI(uint8_t encoder)
+void MotorEncoderLib::setZeroSPI(uint8_t encoder)
 {
   spiWriteRead(AMT22_NOP, encoder, false);
 
@@ -134,7 +134,7 @@ void setZeroSPI(uint8_t encoder)
  * second byte is the command.  
  * This function takes the pin number of the desired device as an input
  */
-void resetAMT22(uint8_t encoder)
+void MotorEncoderLib::resetAMT22(uint8_t encoder)
 {
   spiWriteRead(AMT22_NOP, encoder, false);
 

@@ -16,9 +16,9 @@ class MotorEncoderLib
 		MotorEncoder();
 		uint16_t getPositionSPI(uint8_t encoder, uint8_t resolution);
 		uint8_t spiWriteRead(uint8_t sendByte, uint8_t encoder, uint8_t releaseLine);
-		void setCSLine (uint8_t encoder, uint8_t csLine)
-		void setZeroSPI(uint8_t encoder)
-		void resetAMT22(uint8_t encoder)
+		void setCSLine(uint8_t encoder, uint8_t csLine);
+		void setZeroSPI(uint8_t encoder);
+		void resetAMT22(uint8_t encoder);
 		
 	private: 
 		int _MISO;
