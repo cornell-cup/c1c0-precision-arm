@@ -2,6 +2,7 @@ int stepPin = 5;
 int dirPin = 6;
 int enblPin = 7;
 int Distance = 0;
+int STATE = 0;
 
 void setup() {
 	pinMode (stepPin, OUTPUT);
@@ -16,22 +17,24 @@ void loop() {
 
 Serial.println("test");
 
-for(int x=0; x<1600; x++){
+for(int x=0; x<2000; x++){
 	digitalWrite(stepPin, HIGH);
 	delayMicroseconds(500);
 	digitalWrite(stepPin, LOW);
 	delayMicroseconds(500);
 	Distance = Distance + 1;
 }
-	if (Distance == 25600)
+	if (Distance == 10000)
 	{
-	    if (digitalRead(dirPin) == LOW)
+	    if (STATE==0)
 	    {
 	        digitalWrite(dirPin, HIGH);
+         STATE = 1;
 	    }
 	    else
 	    {
 	       digitalWrite(dirPin, LOW);
+        STATE = 0;
 	    }
 		Distance = 0;
 		delay(2000);
