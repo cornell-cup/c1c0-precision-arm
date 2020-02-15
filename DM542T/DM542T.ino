@@ -18,12 +18,12 @@ Serial.println("test");
 
 for(int x=0; x<1600; x++){
 	digitalWrite(stepPin, HIGH);
-	delay(5);
+	delayMicroseconds(500);
 	digitalWrite(stepPin, LOW);
-	delay(5);
+	delayMicroseconds(500);
 	Distance = Distance + 1;
 }
-	if (Distance == 6400)
+	if (Distance == 25600)
 	{
 	    if (digitalRead(dirPin) == LOW)
 	    {
