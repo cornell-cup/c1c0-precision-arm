@@ -53,6 +53,15 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+//==============================================================
+// Wiring Reference: 
+//  blue: sclock
+//  blue white: MOSI
+//  green: GND
+//  green white: 5V
+//  orange: MISO
+//  orange white: Chip Select
+//==============================================================
 
 /* Include the SPI library for the arduino boards */
 #include <SPI.h>
