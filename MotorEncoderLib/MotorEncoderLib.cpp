@@ -18,14 +18,14 @@ MotorEncoderLib::MotorEncoderLib( )
   _MISO         = 50;
   _MOSI         = 51;
   _SCLK         = 52;
-  _AMT22_NOP    = 0x00;
-  _AMT22_RESET  = 0x60;
-  _AMT22_ZERO   = 0x70;
-  _RES12        = 12;
-  _RES14        = 14;
-  pinMode( _MISO, input );
-  pinMode( _MOSI, output );
-  pinMode( _SCLK, output );
+  AMT22_NOP     = 0x00;
+  AMT22_RESET   = 0x60;
+  AMT22_ZERO    = 0x70;
+  RES12         = 12;
+  RES14         = 14;
+  pinMode( _MISO, INPUT );
+  pinMode( _MOSI, OUTPUT );
+  pinMode( _SCLK, OUTPUT );
 }
 
 /*
