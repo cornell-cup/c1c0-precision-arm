@@ -13,7 +13,7 @@
 class MotorEncoderLib 
 {
 	public: 
-		MotorEncoder();
+		MotorEncoderLib();
 		uint16_t getPositionSPI(uint8_t encoder, uint8_t resolution);
 		uint8_t spiWriteRead(uint8_t sendByte, uint8_t encoder, uint8_t releaseLine);
 		void setCSLine(uint8_t encoder, uint8_t csLine);
@@ -29,7 +29,7 @@ class MotorEncoderLib
 		uint8_t _AMT22_ZERO;
 		uint8_t _RES12;
 		uint8_t _RES14;
-}
+};
 
 #endif
 
