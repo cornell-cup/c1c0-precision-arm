@@ -13,12 +13,12 @@
 /*
  *  Constructor. Defines pins for MISO, MOSI, SCLK
  */
-MotorEncoderLib::MotorEncoderLib( int encoderPin ) 
+MotorEncoderLib::MotorEncoderLib( )
 {
   _MISO         = 50;
   _MOSI         = 51;
   _SCLK         = 52;
-  _CS           = encoderPin;
+  _CS           = 0;
   AMT22_NOP     = 0x00;
   AMT22_RESET   = 0x60;
   AMT22_ZERO    = 0x70;
@@ -30,6 +30,11 @@ MotorEncoderLib::MotorEncoderLib( int encoderPin )
   pinMode( _SCLK, OUTPUT );
 }
 
+void MotorEncoderLib::setChipSelect(int encoderPinIn)
+{
+    _CS = encoderPinIn;
+}
+
 /*
  * This function gets the absolute position from the AMT22 encoder using the SPI bus. The AMT22 position includes 2 checkbits to use
  * for position verification. Both 12-bit and 14-bit encoders transfer position via two bytes, giving 16-bits regardless of resolution.
@@ -39,7 +44,7 @@ MotorEncoderLib::MotorEncoderLib( int encoderPin )
  * This funciton expects res12 or res14 to properly format position responses.
  * Error values are returned as 0xFFFF
  */
-uint16_t MotorEncoderLib::getPositionSPI(uint8_t resolution)
+uint16_t MotorEncoderLib::getPositionSPI(int resolution)
 {
   uint16_t currentPosition;       //16-bit response from encoder
   bool binaryArray[16];           //after receiving the position we will populate this array and use it for calculating the checksum
@@ -83,10 +88,10 @@ uint16_t MotorEncoderLib::getPositionSPI(uint8_t resolution)
  * This function takes the pin number of the desired device as an input
  * The received data is returned.
  */
-uint8_t MotorEncoderLib::spiWriteRead(uint8_t sendByte, uint8_t encoder, uint8_t releaseLine)
+int MotorEncoderLib::spiWriteRead(int sendByte, int encoder, int releaseLine)
 {
   //holder for the received over SPI
-  uint8_t data;
+  int data;
 
   //set cs low, cs may already be low but there's no issue calling it again except for extra time
   setCSLine(encoder ,LOW);
@@ -108,7 +113,7 @@ uint8_t MotorEncoderLib::spiWriteRead(uint8_t sendByte, uint8_t encoder, uint8_t
  * This function sets the state of the SPI line. It isn't necessary but makes the code more readable than having digitalWrite everywhere
  * This function takes the pin number of the desired device as an input
  */
-void MotorEncoderLib::setCSLine (uint8_t encoder, uint8_t csLine)
+void MotorEncoderLib::setCSLine (int encoder, int csLine)
 {
   digitalWrite(encoder, csLine);
 }
@@ -118,7 +123,7 @@ void MotorEncoderLib::setCSLine (uint8_t encoder, uint8_t csLine)
  * second byte is the command.
  * This function takes the pin number of the desired device as an input
  */
-void MotorEncoderLib::setZeroSPI(uint8_t encoder)
+void MotorEncoderLib::setZeroSPI(int encoder)
 {
   spiWriteRead(AMT22_NOP, encoder, false);
 
@@ -136,7 +141,7 @@ void MotorEncoderLib::setZeroSPI(uint8_t encoder)
  * second byte is the command.
  * This function takes the pin number of the desired device as an input
  */
-void MotorEncoderLib::resetAMT22(uint8_t encoder)
+void MotorEncoderLib::resetAMT22(int encoder)
 {
   spiWriteRead(AMT22_NOP, encoder, false);
 

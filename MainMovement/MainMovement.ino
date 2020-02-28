@@ -1,15 +1,26 @@
 #include <MovingSteppersLib.h>
+#include <MotorEncoderLib.h>
 
 
 
 
-//MovingSteppersLib J5 = MovingStepperLib(10, 11);
-MovingSteppersLib J5(10,11);
+MovingSteppersLib J3(6, 7, 2);
+
 void setup() {
   // put your setup code here, to run once:
+  Serial.begin(9600);
+  
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  J5.moveJ5(0,360.0);
+  Serial.println("before first move");
+  Serial.println(J3.prevAngle);
+  Serial.println(digitalRead(J3.dirPin));
+  J3.moveJ3(360.0);
+  Serial.println("after first move");
+  Serial.println(J3.prevAngle);
+  Serial.println(digitalRead(J3.dirPin));
+  J3.moveJ3(180.0);
+  Serial.println("after second move");
 }
