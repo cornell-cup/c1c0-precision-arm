@@ -2,6 +2,7 @@
 #define MovingSteppersLib_h
 
 #include "Arduino.h"
+#include "MotorEncoderLib.h"
 
 class MovingSteppersLib
 {
@@ -15,6 +16,7 @@ class MovingSteppersLib
         void moveJ6(int dir, double angle);
         int stepPin;
         int dirPin;
+        MotorEncoderLib encoder;
 };
 
 #endif
