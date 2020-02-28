@@ -18,11 +18,13 @@ MotorEncoderLib::MotorEncoderLib( int encoderPin )
   _MISO         = 50;
   _MOSI         = 51;
   _SCLK         = 52;
+  _CS           = encoderPin;
   AMT22_NOP     = 0x00;
   AMT22_RESET   = 0x60;
   AMT22_ZERO    = 0x70;
   RES12         = 12;
   RES14         = 14;
+  pinMode( _CS,   INPUT );
   pinMode( _MISO, INPUT );
   pinMode( _MOSI, OUTPUT );
   pinMode( _SCLK, OUTPUT );
@@ -37,13 +39,13 @@ MotorEncoderLib::MotorEncoderLib( int encoderPin )
  * This funciton expects res12 or res14 to properly format position responses.
  * Error values are returned as 0xFFFF
  */
-uint16_t MotorEncoderLib::getPositionSPI(uint8_t encoder, uint8_t resolution)
+uint16_t MotorEncoderLib::getPositionSPI(uint8_t resolution)
 {
   uint16_t currentPosition;       //16-bit response from encoder
   bool binaryArray[16];           //after receiving the position we will populate this array and use it for calculating the checksum
 
   //get first byte which is the high byte, shift it 8 bits. don't release line for the first byte
-  currentPosition = spiWriteRead(AMT22_NOP, encoder, false) << 8;
+  currentPosition = spiWriteRead(AMT22_NOP, _CS, false) << 8;
 
   //this is the time required between bytes as specified in the datasheet.
   //We will implement that time delay here, however the arduino is not the fastest device so the delay
@@ -51,7 +53,7 @@ uint16_t MotorEncoderLib::getPositionSPI(uint8_t encoder, uint8_t resolution)
   delayMicroseconds(3);
 
   //OR the low byte with the currentPosition variable. release line after second byte
-  currentPosition |= spiWriteRead(AMT22_NOP, encoder, true);
+  currentPosition |= spiWriteRead(AMT22_NOP, _CS, true);
 
   //run through the 16 bits of position and put each bit into a slot in the array so we can do the checksum calculation
   for(int i = 0; i < 16; i++) binaryArray[i] = (0x01) & (currentPosition >> (i));

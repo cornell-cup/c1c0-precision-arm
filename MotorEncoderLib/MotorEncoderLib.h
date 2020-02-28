@@ -26,6 +26,7 @@ class MotorEncoderLib
 		int _MISO;
 		int _MOSI;
 		int _SCLK;
+		int _CS;
 		uint8_t AMT22_NOP;
 		uint8_t AMT22_RESET; 
 		uint8_t AMT22_ZERO;
