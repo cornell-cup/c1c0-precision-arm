@@ -44,7 +44,7 @@ void MovingSteppersLib::moveJ1(double curAngle){
   }
 
   //steps to move one degree, known from testing
-  double stepsPerDegree = microStep*stepsPerRev/360.0;
+  double stepsPerDegree = gearRatio*microStep*stepsPerRev/360.0;
   double stepsToTurn = stepsPerDegree * diffAngle;
   for(int x=0; x < stepsToTurn; x++){
     digitalWrite(stepPin, HIGH);
@@ -77,7 +77,7 @@ void MovingSteppersLib::moveJ2(double curAngle){
   }
 
   // INPUT CALCULATION steps to move one degree, known from testing
-  double stepsPerDegree = microStep*stepsPerRev/360.0;
+  double stepsPerDegree = gearRatio*microStep*stepsPerRev/360.0;
   double stepsToTurn = stepsPerDegree * diffAngle;
   for(int x=0; x < stepsToTurn; x++){
     digitalWrite(stepPin, HIGH);
@@ -143,7 +143,7 @@ void MovingSteppersLib::moveJ4( double curAngle){
   }
 
   //21.1111 steps to move one degree, known from testing
-  double stepsPerDegree = microStep*stepsPerRev/360.0;
+  double stepsPerDegree = gearRatio*microStep*stepsPerRev/360.0;
   double stepsToTurn = stepsPerDegree * diffAngle;
   for(int x=0; x < stepsToTurn; x++){
     digitalWrite(stepPin, HIGH);
@@ -178,7 +178,7 @@ void MovingSteppersLib::moveJ5(double curAngle){
   //21.1111 steps to move one degree, known from testing
   double stepsPerDegree = microStep*stepsPerRev/360.0; // made  double divide,
                                                        // was implicitly casting to int
-  double stepsToTurn = stepsPerDegree * diffAngle;
+  double stepsToTurn = gearRatio*stepsPerDegree * diffAngle;
   Serial.println(stepsToTurn);
   for(int x=0; x < stepsToTurn; x++){
     digitalWrite(stepPin, HIGH);
@@ -211,7 +211,7 @@ void MovingSteppersLib::moveJ6(double curAngle){
 
   //21.1111 steps to move one degree, known from testing
   double stepsPerDegree = microStep*stepsPerRev/360.0;
-  double stepsToTurn = stepsPerDegree * diffAngle;
+  double stepsToTurn = gearRatio*stepsPerDegree * diffAngle;
   for(int x=0; x < stepsToTurn; x++){
     digitalWrite(stepPin, HIGH);
     delayMicroseconds(500);
