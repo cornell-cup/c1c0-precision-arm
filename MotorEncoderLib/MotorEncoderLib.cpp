@@ -2,7 +2,7 @@
  * motor_encoder_lib.cpp
  * Date: Feb 15, 2020
  * Converted from the sample code for the CUI amt22 encoder
- *
+ * 
 */
 
 #include "Arduino.h"
@@ -13,49 +13,37 @@
 /*
  *  Constructor. Defines pins for MISO, MOSI, SCLK
  */
-MotorEncoderLib::MotorEncoderLib( )
+MotorEncoderLib::MotorEncoderLib( ) 
 {
   _MISO         = 50;
   _MOSI         = 51;
   _SCLK         = 52;
-  CS            = 49;
-  AMT22_NOP     = 0x00;
-  AMT22_RESET   = 0x60;
-  AMT22_ZERO    = 0x70;
-  RES12         = 12;
-  RES14         = 14;
-  pinMode(    CS, OUTPUT );
-  pinMode( _MISO, INPUT  );
-  pinMode( _MOSI, OUTPUT );
-  pinMode( _SCLK, OUTPUT );
-}
-
-void MotorEncoderLib::setChipSelect(int encoderPinIn)
-{
-    CS = encoderPinIn;
-    digitalWrite(CS, HIGH);
+  _AMT22_NOP    = 0x00;
+  _AMT22_RESET  = 0x60;
+  _AMT22_ZERO   = 0x70;
+  _RES12        = 12;
+  _RES14        = 14;
+  pinMode( _MISO, input );
+  pinMode( _MOSI, output );
+  pinMode( _SCLK, output );
 }
 
 /*
  * This function gets the absolute position from the AMT22 encoder using the SPI bus. The AMT22 position includes 2 checkbits to use
  * for position verification. Both 12-bit and 14-bit encoders transfer position via two bytes, giving 16-bits regardless of resolution.
  * For 12-bit encoders the position is left-shifted two bits, leaving the right two bits as zeros. This gives the impression that the encoder
- * is actually sending 14-bits, when it is actually sending 12-bit values, where every number is multiplied by 4.
+ * is actually sending 14-bits, when it is actually sending 12-bit values, where every number is multiplied by 4. 
  * This function takes the pin number of the desired device as an input
  * This funciton expects res12 or res14 to properly format position responses.
  * Error values are returned as 0xFFFF
- * Encoder reads from 0 to 16384.
- * 16384/360.0 = 45.5111 per degree
-
-
  */
-uint16_t MotorEncoderLib::getPositionSPI(int resolution)
+uint16_t MotorEncoderLib::getPositionSPI(uint8_t encoder, uint8_t resolution)
 {
   uint16_t currentPosition;       //16-bit response from encoder
   bool binaryArray[16];           //after receiving the position we will populate this array and use it for calculating the checksum
 
   //get first byte which is the high byte, shift it 8 bits. don't release line for the first byte
-  currentPosition = spiWriteRead(AMT22_NOP, CS, false) << 8;
+  currentPosition = spiWriteRead(AMT22_NOP, encoder, false) << 8;   
 
   //this is the time required between bytes as specified in the datasheet.
   //We will implement that time delay here, however the arduino is not the fastest device so the delay
@@ -63,7 +51,7 @@ uint16_t MotorEncoderLib::getPositionSPI(int resolution)
   delayMicroseconds(3);
 
   //OR the low byte with the currentPosition variable. release line after second byte
-  currentPosition |= spiWriteRead(AMT22_NOP, CS, true);
+  currentPosition |= spiWriteRead(AMT22_NOP, encoder, true);        
 
   //run through the 16 bits of position and put each bit into a slot in the array so we can do the checksum calculation
   for(int i = 0; i < 16; i++) binaryArray[i] = (0x01) & (currentPosition >> (i));
@@ -87,16 +75,16 @@ uint16_t MotorEncoderLib::getPositionSPI(int resolution)
 }
 
 /*
- * This function does the SPI transfer. sendByte is the byte to transmit.
+ * This function does the SPI transfer. sendByte is the byte to transmit. 
  * Use releaseLine to let the spiWriteRead function know if it should release
- * the chip select line after transfer.
+ * the chip select line after transfer.  
  * This function takes the pin number of the desired device as an input
  * The received data is returned.
  */
-int MotorEncoderLib::spiWriteRead(int sendByte, int encoder, int releaseLine)
+uint8_t MotorEncoderLib::spiWriteRead(uint8_t sendByte, uint8_t encoder, uint8_t releaseLine)
 {
   //holder for the received over SPI
-  int data;
+  uint8_t data;
 
   //set cs low, cs may already be low but there's no issue calling it again except for extra time
   setCSLine(encoder ,LOW);
@@ -106,56 +94,56 @@ int MotorEncoderLib::spiWriteRead(int sendByte, int encoder, int releaseLine)
   // is likely inherantly there already
   delayMicroseconds(3);
 
-  //send the command
+  //send the command  
   data = SPI.transfer(sendByte);
   delayMicroseconds(3); //There is also a minimum time after clocking that CS should remain asserted before we release it
   setCSLine(encoder, releaseLine); //if releaseLine is high set it high else it stays low
-
+  
   return data;
 }
 
 /*
- * This function sets the state of the SPI line. It isn't necessary but makes the code more readable than having digitalWrite everywhere
+ * This function sets the state of the SPI line. It isn't necessary but makes the code more readable than having digitalWrite everywhere 
  * This function takes the pin number of the desired device as an input
  */
-void MotorEncoderLib::setCSLine (int encoder, int csLine)
+void MotorEncoderLib::setCSLine (uint8_t encoder, uint8_t csLine)
 {
   digitalWrite(encoder, csLine);
 }
 
 /*
- * The AMT22 bus allows for extended commands. The first byte is 0x00 like a normal position transfer, but the
- * second byte is the command.
+ * The AMT22 bus allows for extended commands. The first byte is 0x00 like a normal position transfer, but the 
+ * second byte is the command.  
  * This function takes the pin number of the desired device as an input
  */
-void MotorEncoderLib::setZeroSPI(int encoder)
+void MotorEncoderLib::setZeroSPI(uint8_t encoder)
 {
   spiWriteRead(AMT22_NOP, encoder, false);
 
   //this is the time required between bytes as specified in the datasheet.
   //We will implement that time delay here, however the arduino is not the fastest device so the delay
   //is likely inherantly there already
-  delayMicroseconds(3);
-
+  delayMicroseconds(3); 
+  
   spiWriteRead(AMT22_ZERO, encoder, true);
   delay(250); //250 second delay to allow the encoder to reset
 }
 
 /*
- * The AMT22 bus allows for extended commands. The first byte is 0x00 like a normal position transfer, but the
- * second byte is the command.
+ * The AMT22 bus allows for extended commands. The first byte is 0x00 like a normal position transfer, but the 
+ * second byte is the command.  
  * This function takes the pin number of the desired device as an input
  */
-void MotorEncoderLib::resetAMT22(int encoder)
+void MotorEncoderLib::resetAMT22(uint8_t encoder)
 {
   spiWriteRead(AMT22_NOP, encoder, false);
 
   //this is the time required between bytes as specified in the datasheet.
   //We will implement that time delay here, however the arduino is not the fastest device so the delay
   //is likely inherantly there already
-  delayMicroseconds(3);
-
+  delayMicroseconds(3); 
+  
   spiWriteRead(AMT22_RESET, encoder, true);
-
+  
   delay(250); //250 second delay to allow the encoder to start back up
 }

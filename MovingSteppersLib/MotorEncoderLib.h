@@ -5,6 +5,18 @@
  *
 */
 
+
+//==============================================================
+// Wiring Reference:
+//  blue: sclock
+//  blue white: MOSI
+//  green: GND
+//  green white: 5V
+//  orange: MISO
+//  orange white: Chip Select
+//==============================================================
+
+
 #ifndef MotorEncoderLib_h
 #define MotorEncoderLib_h
 
@@ -22,12 +34,12 @@ class MotorEncoderLib
 		void resetAMT22(int encoder);
 		int RES12;
 		int RES14;
+        int CS;
 
 	private:
 		int _MISO;
 		int _MOSI;
 		int _SCLK;
-		int _CS;
 		int AMT22_NOP;
 		int AMT22_RESET;
 		int AMT22_ZERO;

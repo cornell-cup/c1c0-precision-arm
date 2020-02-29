@@ -1,14 +1,15 @@
 #include <MotorEncoderLib.h>
 #include <SPI.h>
 
-MotorEncoderLib encoder; 
+MotorEncoderLib encoder;
 
 /* Serial rates for UART */
 #define BAUDRATE        115200
 
 /* SPI pins */
-#define ENC_0            2
+#define ENC_0            49
 #define ENC_1            3
+#define RES14            14
 
 /* Define special ascii characters */
 #define NEWLINE         0x0A
@@ -24,9 +25,9 @@ void setup(){
   //Get the CS line high which is the default inactive state
   digitalWrite(ENC_0, HIGH);
   digitalWrite(ENC_1, HIGH);
-  
+
   SPI.setClockDivider(SPI_CLOCK_DIV32);    // 500 kHz
-  SPI.begin(); 
+  SPI.begin();
 }
 
 void loop(){
@@ -44,18 +45,18 @@ void loop(){
   //once we enter this loop we will run forever
   while(1)
   {
-    //set attemps counter at 0 so we can try again if we get bad position    
+    //set attemps counter at 0 so we can try again if we get bad position
     attempts = 0;
 
     //this function gets the encoder position and returns it as a uint16_t
     //send the function either res12 or res14 for your encoders resolution
-    encoderPosition = encoder.getPositionSPI(ENC_0, encoder.RES14); 
+    encoderPosition = encoder.getPositionSPI(ENC_0, RES14);
 
     //if the position returned was 0xFFFF we know that there was an error calculating the checksum
     //make 3 attempts for position. we will pre-increment attempts because we'll use the number later and want an accurate count
     while (encoderPosition == 0xFFFF && ++attempts < 3)
     {
-      encoderPosition = encoder.getPositionSPI(ENC_0, encoder.RES14); //try again
+      encoderPosition = encoder.getPositionSPI(ENC_0, RES14); //try again
     }
 
     if (encoderPosition == 0xFFFF) //position is bad, let the user know how many times we tried
@@ -66,7 +67,7 @@ void loop(){
     }
     else //position was good, print to serial stream
     {
-      
+
       Serial.print("Encoder 0: ");
       Serial.print(encoderPosition, DEC); //print the position in decimal format
       Serial.write(NEWLINE);
@@ -76,5 +77,5 @@ void loop(){
     //delay() is in milliseconds
     delay(500);
   }
-  
+
 }
