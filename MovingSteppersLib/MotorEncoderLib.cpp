@@ -33,6 +33,7 @@ MotorEncoderLib::MotorEncoderLib( )
 void MotorEncoderLib::setChipSelect(int encoderPinIn)
 {
     CS = encoderPinIn;
+    pinMode(CS, OUTPUT);
     digitalWrite(CS, HIGH);
 }
 
