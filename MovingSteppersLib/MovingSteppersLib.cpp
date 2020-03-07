@@ -230,8 +230,8 @@ void MovingSteppersLib::moveJ5(double curAngle){
   else{
       digitalWrite(dirPin, LOW);
       sign = -1;
-}
-    encoderDiff = sign * encoderDiff;
+  }
+  encoderDiff = sign * encoderDiff;
 
   while (encoderDiff >  10) {    // tolerance for the diff
       digitalWrite(stepPin, HIGH);
@@ -249,6 +249,8 @@ void MovingSteppersLib::moveJ5(double curAngle){
           sign = -1;
       }
       encoderDiff = sign * encoderDiff;
+  }
+
 }
 
 void MovingSteppersLib::moveJ6(double curAngle){
