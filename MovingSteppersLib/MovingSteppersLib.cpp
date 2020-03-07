@@ -47,16 +47,41 @@ void MovingSteppersLib::moveJ1(double curAngle){
       diffAngle = -diffAngle;
   }
 
-  //steps to move one degree, known from testing
-  double stepsPerDegree = gearRatio*microStep*stepsPerRev/360.0;
-  double stepsToTurn = stepsPerDegree * diffAngle;
-  for(int x=0; x < stepsToTurn; x++){
-    digitalWrite(stepPin, HIGH);
-    delayMicroseconds(500);
-    digitalWrite(stepPin, LOW);
-    delayMicroseconds(500);
+  //compare prevAngle to curAngle to set direction in which we move
+  int encoderTarget = curAngle * 45.51111;
+  int encoderPosition = encoder.getPositionSPI(14);
+  // int stepCounter = 55;
+  int encoderDiff = encoderTarget - encoderPosition;
+  int sign = 1;
+
+  if(encoderDiff >= 0.0){
+      digitalWrite(dirPin, HIGH);
+      sign = 1;
   }
-  prevAngle = curAngle;
+  else{
+      digitalWrite(dirPin, LOW);
+      sign = -1;
+  }
+  encoderDiff = sign * encoderDiff;
+
+  while (encoderDiff >  10) {    // tolerance for the diff
+      digitalWrite(stepPin, HIGH);
+      delayMicroseconds(300);
+      digitalWrite(stepPin, LOW);
+      delayMicroseconds(300);
+      encoderPosition = encoder.getPositionSPI(14);
+      encoderDiff = encoderTarget - encoderPosition;
+      if(encoderDiff >= 0.0){
+          digitalWrite(dirPin, HIGH);
+          sign = 1;
+      }
+      else{
+          digitalWrite(dirPin, LOW);
+          sign = -1;
+      }
+      encoderDiff = sign * encoderDiff;
+  }
+
 }
 
 void MovingSteppersLib::moveJ2(double curAngle){
@@ -71,25 +96,40 @@ void MovingSteppersLib::moveJ2(double curAngle){
   int gearRatio = 50;
 
   //compare prevAngle to curAngle to set direction in which we move
-  double diffAngle = curAngle - prevAngle;
-  if(diffAngle >= 0.0){
+  int encoderTarget = curAngle * 45.51111;
+  int encoderPosition = encoder.getPositionSPI(14);
+  // int stepCounter = 55;
+  int encoderDiff = encoderTarget - encoderPosition;
+  int sign = 1;
+
+  if(encoderDiff >= 0.0){
       digitalWrite(dirPin, HIGH);
+      sign = 1;
   }
   else{
       digitalWrite(dirPin, LOW);
-      diffAngle = -diffAngle;
+      sign = -1;
+  }
+  encoderDiff = sign * encoderDiff;
+
+  while (encoderDiff >  10) {    // tolerance for the diff
+      digitalWrite(stepPin, HIGH);
+      delayMicroseconds(300);
+      digitalWrite(stepPin, LOW);
+      delayMicroseconds(300);
+      encoderPosition = encoder.getPositionSPI(14);
+      encoderDiff = encoderTarget - encoderPosition;
+      if(encoderDiff >= 0.0){
+          digitalWrite(dirPin, HIGH);
+          sign = 1;
+      }
+      else{
+          digitalWrite(dirPin, LOW);
+          sign = -1;
+      }
+      encoderDiff = sign * encoderDiff;
   }
 
-  // INPUT CALCULATION steps to move one degree, known from testing
-  double stepsPerDegree = gearRatio*microStep*stepsPerRev/360.0;
-  double stepsToTurn = stepsPerDegree * diffAngle;
-  for(int x=0; x < stepsToTurn; x++){
-    digitalWrite(stepPin, HIGH);
-    delayMicroseconds(500);
-    digitalWrite(stepPin, LOW);
-    delayMicroseconds(500);
-  }
-  prevAngle = curAngle;
 }
 
 
@@ -137,39 +177,7 @@ void MovingSteppersLib::moveJ3( double curAngle){
           sign = -1;
       }
       encoderDiff = sign * encoderDiff;
-      //
-      // if (stepCounter == 0) {
-      //     encoderPosition = encoder.getPositionSPI(14);
-      //     encoderDiff = encoderTarget - encoderPosition;
-      //     if (encoderDiff > 50) stepCounter = 55;
-      //     else if (encoderDiff > 0) stepCounter = encoderDiff * 1000 / 50 * 55 / 1000;
-      //     else  { // for overshoot
-      //
-      //     }
-      // }
   }
-
-
-
-
-
-
-
-  //INPUT CALCULATION steps to move one degree, known from testing
-
-  // double stepsPerDegree = gearRatio*microStep*stepsPerRev/360.0;
-  // double stepsToTurn = stepsPerDegree * diffAngle;
-  // int counter = 0; //we want to check the encoder value every 20 steps
-  // // for(int x=0; x < stepsToTurn; x++){
-  // while(notatposition){}
-  //   digitalWrite(stepPin, HIGH);
-  //   delayMicroseconds(500);
-  //   digitalWrite(stepPin, LOW);
-  //   delayMicroseconds(500);
-  //
-  //   }
-  // }
-  // prevAngle = curAngle;
 
 }
 
@@ -184,25 +192,40 @@ void MovingSteppersLib::moveJ4( double curAngle){
   int gearRatio = 14;
 
   //compare prevAngle to curAngle to set direction in which we move
-  double diffAngle = curAngle - prevAngle;
-  if(diffAngle >= 0.0){
+  int encoderTarget = curAngle * 45.51111;
+  int encoderPosition = encoder.getPositionSPI(14);
+  // int stepCounter = 55;
+  int encoderDiff = encoderTarget - encoderPosition;
+  int sign = 1;
+
+  if(encoderDiff >= 0.0){
       digitalWrite(dirPin, HIGH);
+      sign = 1;
   }
   else{
       digitalWrite(dirPin, LOW);
-      diffAngle = -diffAngle;
+      sign = -1;
+  }
+  encoderDiff = sign * encoderDiff;
+
+  while (encoderDiff >  10) {    // tolerance for the diff
+      digitalWrite(stepPin, HIGH);
+      delayMicroseconds(300);
+      digitalWrite(stepPin, LOW);
+      delayMicroseconds(300);
+      encoderPosition = encoder.getPositionSPI(14);
+      encoderDiff = encoderTarget - encoderPosition;
+      if(encoderDiff >= 0.0){
+          digitalWrite(dirPin, HIGH);
+          sign = 1;
+      }
+      else{
+          digitalWrite(dirPin, LOW);
+          sign = -1;
+      }
+      encoderDiff = sign * encoderDiff;
   }
 
-  //21.1111 steps to move one degree, known from testing
-  double stepsPerDegree = gearRatio*microStep*stepsPerRev/360.0;
-  double stepsToTurn = stepsPerDegree * diffAngle;
-  for(int x=0; x < stepsToTurn; x++){
-    digitalWrite(stepPin, HIGH);
-    delayMicroseconds(500);
-    digitalWrite(stepPin, LOW);
-    delayMicroseconds(500);
-  }
-  prevAngle = curAngle;
 }
 
 void MovingSteppersLib::moveJ5(double curAngle){
@@ -264,23 +287,38 @@ void MovingSteppersLib::moveJ6(double curAngle){
   int gearRatio = 19;
 
   //compare prevAngle to curAngle to set direction in which we move
-  double diffAngle = curAngle - prevAngle;
-  if(diffAngle >= 0.0){
+  int encoderTarget = curAngle * 45.51111;
+  int encoderPosition = encoder.getPositionSPI(14);
+  // int stepCounter = 55;
+  int encoderDiff = encoderTarget - encoderPosition;
+  int sign = 1;
+
+  if(encoderDiff >= 0.0){
       digitalWrite(dirPin, HIGH);
+      sign = 1;
   }
   else{
       digitalWrite(dirPin, LOW);
-      diffAngle = -diffAngle;
+      sign = -1;
+  }
+  encoderDiff = sign * encoderDiff;
+
+  while (encoderDiff >  10) {    // tolerance for the diff
+      digitalWrite(stepPin, HIGH);
+      delayMicroseconds(300);
+      digitalWrite(stepPin, LOW);
+      delayMicroseconds(300);
+      encoderPosition = encoder.getPositionSPI(14);
+      encoderDiff = encoderTarget - encoderPosition;
+      if(encoderDiff >= 0.0){
+          digitalWrite(dirPin, HIGH);
+          sign = 1;
+      }
+      else{
+          digitalWrite(dirPin, LOW);
+          sign = -1;
+      }
+      encoderDiff = sign * encoderDiff;
   }
 
-  //21.1111 steps to move one degree, known from testing
-  double stepsPerDegree = microStep*stepsPerRev/360.0;
-  double stepsToTurn = gearRatio*stepsPerDegree * diffAngle;
-  for(int x=0; x < stepsToTurn; x++){
-    digitalWrite(stepPin, HIGH);
-    delayMicroseconds(500);
-    digitalWrite(stepPin, LOW);
-    delayMicroseconds(500);
-  }
-  prevAngle = curAngle;
 }
