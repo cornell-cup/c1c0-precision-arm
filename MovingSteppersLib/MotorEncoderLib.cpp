@@ -18,7 +18,7 @@ MotorEncoderLib::MotorEncoderLib( )
   _MISO         = 50;
   _MOSI         = 51;
   _SCLK         = 52;
-  CS            = 0;
+  CS            = 10;
   AMT22_NOP     = 0x00;
   AMT22_RESET   = 0x60;
   AMT22_ZERO    = 0x70;
