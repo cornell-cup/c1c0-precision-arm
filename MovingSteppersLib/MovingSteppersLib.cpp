@@ -3,10 +3,6 @@
 #include "MotorEncoderLib.h"
 #include <SPI.h>
 
-int stepPin;
-int dirPin;
-int encoderPin;
-
 // Using `` for setup and in movement function - not sure if it's needed
 // but it's possible that it fixed some problems
 MovingSteppersLib::MovingSteppersLib(int stepPinIn, int dirPinIn, int encoderPinIn)
@@ -26,26 +22,20 @@ MovingSteppersLib::MovingSteppersLib(int stepPinIn, int dirPinIn, int encoderPin
 }
 
 
-void MovingSteppersLib::moveJ1(double curAngle){
+int MovingSteppersLib::moveJ1(double curAngle, int flag){
   //moves the J1 stepper motor
   // motor has a gearRatio of 20, so 20:1 speed reducer
   //microstepping 1 means 200 steps per revolution
   //microstepping 2 then 400 steps/rev, and so on
   //use microstep = 2 on  motor
 
+  if (flag == -1) {
+    return -1;
+  }
+
   int microStep = 2;
   int stepsPerRev = 200;
   int gearRatio = 50;
-
-  //compare prevAngle to curAngle to set direction in which we move
-  double diffAngle = curAngle - prevAngle;
-  if(diffAngle >= 0.0){
-      digitalWrite(dirPin, HIGH);
-  }
-  else{
-      digitalWrite(dirPin, LOW);
-      diffAngle = -diffAngle;
-  }
 
   //compare prevAngle to curAngle to set direction in which we move
   int encoderTarget = curAngle * 45.51111;
@@ -82,14 +72,19 @@ void MovingSteppersLib::moveJ1(double curAngle){
       encoderDiff = sign * encoderDiff;
   }
 
+  return 1;
 }
 
-void MovingSteppersLib::moveJ2(double curAngle){
+int MovingSteppersLib::moveJ2(double curAngle, int flag){
   //moves the J2 stepper motor
   // motor has a gearRatio of 50, so 50:1 speed reducer
   //microstepping 1 means 200 steps per revolution
   //microstepping 2 then 400 steps/rev, and so on
   //use microstep = 1 on  motor
+
+  if (flag == -1) {
+    return -1;
+  }
 
   int microStep = 1;
   int stepsPerRev = 200;
@@ -130,24 +125,30 @@ void MovingSteppersLib::moveJ2(double curAngle){
       encoderDiff = sign * encoderDiff;
   }
 
+  return 1;
 }
 
 
-void MovingSteppersLib::moveJ3( double curAngle){
+int MovingSteppersLib::moveJ3(double curAngle, int flag){
   //moves the J3 stepper motor
   // motor has a gearRatio of 50, so 50:1 speed reducer
   //microstepping 1 means 200 steps per revolution
   //microstepping 2 then 400 steps/rev, and so on
   //use microstep = 1 on  motor
 
+  if (flag == -1) {
+    return -1;
+  }
+
   int microStep = 2;
   int stepsPerRev = 200;
   int gearRatio = 50;
+  int attempt = 0;
 
   //compare prevAngle to curAngle to set direction in which we move
   int encoderTarget = curAngle * 45.51111;
   int encoderPosition = encoder.getPositionSPI(14);
-  // int stepCounter = 55;
+  int prevEncoder = encoderPosition;
   int encoderDiff = encoderTarget - encoderPosition;
   int sign = 1;
 
@@ -167,6 +168,15 @@ void MovingSteppersLib::moveJ3( double curAngle){
       digitalWrite(stepPin, LOW);
       delayMicroseconds(300);
       encoderPosition = encoder.getPositionSPI(14);
+      // Increase attempt count when motor is not moving and raise a flag if too many times
+      if ((prevEncoder - encoderPosition >= 10) || (encoderPosition - prevEncoder >= 10)) {
+        attempt += 1;
+        if (attempt >= 5) {
+          return -1;  // raise a flag
+        }
+      } else {
+        attempt = 0;
+      }
       encoderDiff = encoderTarget - encoderPosition;
       if(encoderDiff >= 0.0){
           digitalWrite(dirPin, HIGH);
@@ -179,14 +189,20 @@ void MovingSteppersLib::moveJ3( double curAngle){
       encoderDiff = sign * encoderDiff;
   }
 
+  return 1;
 }
 
-void MovingSteppersLib::moveJ4( double curAngle){
+int MovingSteppersLib::moveJ4( double curAngle, int flag){
   //moves the J4 stepper motor
   // motor has a gearRatio of 14, so 14:1 speed reducer
   //microstepping 1 means 200 steps per revolution
   //microstepping 2 then 400 steps/rev, and so on
   //use microstep = 2 on  motor
+
+  if (flag == -1) {
+    return -1;
+  }
+
   int microStep = 2;
   int stepsPerRev = 200;
   int gearRatio = 14;
@@ -226,14 +242,20 @@ void MovingSteppersLib::moveJ4( double curAngle){
       encoderDiff = sign * encoderDiff;
   }
 
+  return 1;
 }
 
-void MovingSteppersLib::moveJ5(double curAngle){
+int MovingSteppersLib::moveJ5(double curAngle, int flag){
   //moves the J5 stepper motor
   // motor has a gearRatio of 1, so 1:1 speed reducer
   //microstepping 1 means 200 steps per revolution
   //microstepping 2 then 400 steps/rev, and so on
   //use microstep = 2 on  motor
+
+  if (flag == -1) {
+    return -1;
+  }
+
   int microStep = 4; // TODO: change to actual desired miro step. Current setup (as of 2/21)
                      // moves J5 the correct curAngle when using  function
   int stepsPerRev = 200;
@@ -274,14 +296,20 @@ void MovingSteppersLib::moveJ5(double curAngle){
       encoderDiff = sign * encoderDiff;
   }
 
+  return 1;
 }
 
-void MovingSteppersLib::moveJ6(double curAngle){
+int MovingSteppersLib::moveJ6(double curAngle, int flag){
   //moves the J6 stepper motor
   // motor has a gearRatio of 19, so 19:1 speed reducer
   //microstepping 1 means 200 steps per revolution
   //microstepping 2 then 400 steps/rev, and so on
   //use microstep = 2 on  motor
+
+  if (flag == -1) {
+    return -1;
+  }
+
   int microStep = 2;
   int stepsPerRev = 200;
   int gearRatio = 19;
@@ -321,4 +349,5 @@ void MovingSteppersLib::moveJ6(double curAngle){
       encoderDiff = sign * encoderDiff;
   }
 
+  return 1;
 }

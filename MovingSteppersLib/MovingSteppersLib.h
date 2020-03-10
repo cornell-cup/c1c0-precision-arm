@@ -8,15 +8,15 @@ class MovingSteppersLib
 {
 	public:
 		MovingSteppersLib(int stepPinIn, int dirPinIn, int encoderPinIn);
-        void moveJ1(double curAngle);
-        void moveJ2(double curAngle);
-        void moveJ3(double curAngle);
-        void moveJ4(double curAngle);
-        void moveJ5(double curAngle);
-        void moveJ6(double curAngle);
+        int moveJ1(double curAngle, int flag);
+        int moveJ2(double curAngle, int flag);
+        int moveJ3(double curAngle, int flag);
+        int moveJ4(double curAngle, int flag);
+        int moveJ5(double curAngle, int flag);
+        int moveJ6(double curAngle, int flag);
         int stepPin;
         int dirPin;
-        double prevAngle;
+        double prevEncoder;
         MotorEncoderLib encoder;
 };
 
