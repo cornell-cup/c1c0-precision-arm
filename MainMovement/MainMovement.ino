@@ -21,13 +21,13 @@ void loop() {
   Serial.print("CS: ");
   Serial.println(J3.encoder.CS);
   Serial.println(digitalRead(J3.dirPin));
-  J3.moveJ3(359.0);
+  J3.move(359.0);
   Serial.println("after first J3 move");
   Serial.print("target value: ");
   Serial.println(45.51111 * 280);
   Serial.println(J3.prevAngle);
   Serial.println(digitalRead(J3.dirPin));
-  J3.moveJ3(0.0);
+  J3.move(0.0);
   Serial.println("after second J3 move");
 
 
@@ -39,12 +39,12 @@ void loop() {
   Serial.print("CS: ");
   Serial.println(J5.encoder.CS);
   Serial.println(digitalRead(J5.dirPin));
-  J5.moveJ5(359.0);
+  J5.move(359.0);
   Serial.println("after first J5 move");
   Serial.print("target value: ");
   Serial.println(45.51111 * 280);
   Serial.println(J5.prevAngle);
   Serial.println(digitalRead(J5.dirPin));
-  J5.moveJ5(0.0);
+  J5.move(0.0);
   Serial.println("after second J5 move");
 }
