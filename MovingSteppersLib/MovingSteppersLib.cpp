@@ -52,6 +52,15 @@ int MovingSteppersLib::move(double curAngle, int flag){
       digitalWrite(stepPin, LOW);
       delayMicroseconds(300);
       encoderPosition = encoder.getPositionSPI(14);
+      // Increase attempt count when motor is not moving and raise a flag if too many times
+       if ((prevEncoder - encoderPosition >= 10) || (encoderPosition - prevEncoder >= 10)) {
+         attempt += 1;
+         if (attempt >= 5) {
+           return -1;  // raise a flag
+         }
+       } else {
+         attempt = 0;
+       }
       encoderDiff = encoderTarget - encoderPosition;
       if(encoderDiff >= 0.0){
           digitalWrite(dirPin, HIGH);
