@@ -15,7 +15,7 @@ MovingSteppersLib::MovingSteppersLib(int stepPinIn, int dirPinIn, int encoderPin
     // set output mode for pins
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
-    prevAngle = 0.0;
+    prevEncoder = 0.0;
 
     SPI.setClockDivider(SPI_CLOCK_DIV32);
     SPI.begin();
@@ -23,19 +23,22 @@ MovingSteppersLib::MovingSteppersLib(int stepPinIn, int dirPinIn, int encoderPin
 
 
 int MovingSteppersLib::move(double curAngle, int flag){
-  //moves the stepper motor
 
+  // pass the flag from previous stepper to current stepper
+  // don't move if there's a -1 flag raised before it
   if (flag == -1) {
     return -1;
   }
     
-  //compare prevAngle to curAngle to set direction in which we move
+  // convert angle to step count for the stepper
   int encoderTarget = curAngle * 45.51111;
   int encoderPosition = encoder.getPositionSPI(14);
-  // int stepCounter = 55;
   int encoderDiff = encoderTarget - encoderPosition;
+  int prevEncoder = encoderPosition;
   int sign = 1;
+  int attempt = 0;
 
+  // set moving direction
   if(encoderDiff >= 0.0){
       digitalWrite(dirPin, HIGH);
       sign = 1;
@@ -52,8 +55,9 @@ int MovingSteppersLib::move(double curAngle, int flag){
       digitalWrite(stepPin, LOW);
       delayMicroseconds(300);
       encoderPosition = encoder.getPositionSPI(14);
+
       // Increase attempt count when motor is not moving and raise a flag if too many times
-       if ((prevEncoder - encoderPosition >= 10) || (encoderPosition - prevEncoder >= 10)) {
+       if ((prevEncoder - encoderPosition <= 10) || (encoderPosition - prevEncoder <= 10)) {
          attempt += 1;
          if (attempt >= 5) {
            return -1;  // raise a flag
@@ -62,6 +66,9 @@ int MovingSteppersLib::move(double curAngle, int flag){
          attempt = 0;
        }
       encoderDiff = encoderTarget - encoderPosition;
+      prevEncoder = encoderPosition;
+      
+      // check direction every iteration
       if(encoderDiff >= 0.0){
           digitalWrite(dirPin, HIGH);
           sign = 1;
