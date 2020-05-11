@@ -6,7 +6,10 @@ Place arduino code in a folder that has the same name as the arduino file.
 
 Wiring Tip:
 1. every stepper object takes in three pin inputs: step pin, direction pin, encoder pin
-2. To power the driver, use 24V for DM542T and DM320T(?)
+2. Driver Wiring reference:
+	powered with 24V
+	PUL+ and DIR+ are connected to arduino +5V
+	PUL- and DIR- are connected to control signal
 3. Eocoder wiring reference:
 	blue: sclock (52)
 	blue white: MOSI (51)
