@@ -29,7 +29,7 @@ int MovingSteppersLib::move(double curAngle, int flag){
   // if (flag == -1) {
   //   return -1;
   // }
-    
+
   // --> convert angle to step count for the stepper
   int encoderTarget = curAngle * 45.51111;
   int encoderPosition = encoder.getPositionSPI(14);
@@ -39,17 +39,17 @@ int MovingSteppersLib::move(double curAngle, int flag){
   // int attempt = 0;
 
   // --> set moving direction
-  if(encoderDiff >= 0.0){
-      digitalWrite(dirPin, HIGH);
+  if(encoderDiff >= 0){
+      digitalWrite(dirPin, LOW);
       sign = 1;
   }
   else{
-      digitalWrite(dirPin, LOW);
+      digitalWrite(dirPin, HIGH);
       sign = -1;
   }
   encoderDiff = sign * encoderDiff;
 
-  while (encoderDiff >  10) {    // tolerance for the diff
+  while (encoderDiff >  10 || encoderDiff < -10) {    // tolerance for the diff
       digitalWrite(stepPin, HIGH);
       delayMicroseconds(300);
       digitalWrite(stepPin, LOW);
@@ -67,17 +67,17 @@ int MovingSteppersLib::move(double curAngle, int flag){
       //  }
       encoderDiff = encoderTarget - encoderPosition;
       // prevEncoder = encoderPosition;
-      
+
       // --> check direction every iteration
-      if(encoderDiff >= 0.0){
-          digitalWrite(dirPin, HIGH);
-          sign = 1;
-      }
-      else{
-          digitalWrite(dirPin, LOW);
-          sign = -1;
-      }
-      encoderDiff = sign * encoderDiff;
+      // if(encoderDiff >= 0){
+      //     digitalWrite(dirPin, HIGH);
+      //     sign = 1;
+      // }
+      // else{
+      //     digitalWrite(dirPin, LOW);
+      //     sign = -1;
+      // }
+      // encoderDiff = sign * encoderDiff;
   }
 
   return 1;
