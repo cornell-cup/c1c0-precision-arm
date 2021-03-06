@@ -40,11 +40,11 @@ int MovingSteppersLib::move(double curAngle, int flag){
 
   // --> set moving direction
   if(encoderDiff > 0){
-      digitalWrite(dirPin, LOW);
+      digitalWrite(dirPin, HIGH);
       sign = 1;
   }
   else{
-      digitalWrite(dirPin, HIGH);
+      digitalWrite(dirPin, LOW);
       sign = -1;
   }
   encoderDiff = sign * encoderDiff;
@@ -68,24 +68,49 @@ int MovingSteppersLib::move(double curAngle, int flag){
       encoderDiff = encoderTarget - encoderPosition;
       // prevEncoder = encoderPosition;
 
-      // --> check direction every iteration
-      if(encoderDiff > 0){
-          digitalWrite(dirPin, LOW);
-          sign = 1;
-      }
-      else{
-          digitalWrite(dirPin, HIGH);
-          sign = -1;
-      }
-      encoderDiff = sign * encoderDiff;
 
-      //possible solution to zero crossover problem
-      // if (abs(encoderDiff) > 180) {
-      //     if encoderTarget > encoderPosition
-      //      go clockwise
-      //     else
-      //      go counterclockwise
+      /*--------------------------------------------
+      This section of code works for joints that have angle limits
+      */
+      // --> check direction every iteration
+      // if(encoderDiff > 0){
+      //     digitalWrite(dirPin, HIGH);
+      //     sign = 1;
       // }
+      // else{
+      //     digitalWrite(dirPin, LOW);
+      //     sign = -1;
+      // }
+      //--------------------------------------------
+
+
+      /*----------------------------------------------
+      This section of code will work for joints that need to spin more than
+      360 degrees, or joints that need to take the shortest path to the
+      next joint position.
+      */
+      if (abs(encoderDiff) >= 8192) { //angle > 180 (encoder units)
+          if (encoderDiff > 0) {
+           digitalWrite(dirPin, LOW); //J3 Clockwise is LOW
+           sign = 1;
+          }
+          else {
+           digitalWrite(dirPin, HIGH);
+           sign = -1;
+        }
+      }
+      else {
+          if(encoderDiff > 0){
+              digitalWrite(dirPin, HIGH);
+              sign = 1;
+          }
+          else {
+              digitalWrite(dirPin, LOW);
+              sign = -1;
+          }
+
+        }
+
   }
 
   return 1;

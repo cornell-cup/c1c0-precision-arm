@@ -3,8 +3,8 @@
 
 MovingSteppersLib J3(47, 22, 10);
 //MovingSteppersLib J5(8, 9, 48);
-double target1 = 330.0;
-double target2 = 315.0;
+double target1 = 0;
+double target2 = 315;
 //int directionPin = 22;
 //int stepPin = 47;
 
