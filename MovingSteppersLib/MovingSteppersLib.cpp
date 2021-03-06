@@ -39,7 +39,7 @@ int MovingSteppersLib::move(double curAngle, int flag){
   // int attempt = 0;
 
   // --> set moving direction
-  if(encoderDiff >= 0){
+  if(encoderDiff > 0){
       digitalWrite(dirPin, LOW);
       sign = 1;
   }
@@ -69,15 +69,23 @@ int MovingSteppersLib::move(double curAngle, int flag){
       // prevEncoder = encoderPosition;
 
       // --> check direction every iteration
-      // if(encoderDiff >= 0){
-      //     digitalWrite(dirPin, HIGH);
-      //     sign = 1;
+      if(encoderDiff > 0){
+          digitalWrite(dirPin, LOW);
+          sign = 1;
+      }
+      else{
+          digitalWrite(dirPin, HIGH);
+          sign = -1;
+      }
+      encoderDiff = sign * encoderDiff;
+
+      //possible solution to zero crossover problem
+      // if (abs(encoderDiff) > 180) {
+      //     if encoderTarget > encoderPosition
+      //      go clockwise
+      //     else
+      //      go counterclockwise
       // }
-      // else{
-      //     digitalWrite(dirPin, LOW);
-      //     sign = -1;
-      // }
-      // encoderDiff = sign * encoderDiff;
   }
 
   return 1;
