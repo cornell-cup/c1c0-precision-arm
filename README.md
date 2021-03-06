@@ -34,3 +34,5 @@ Wiring Tip:
 		B+: yellow
 		B-: blue
 
+Direction Pin: 
+	For J3: When dirPin is HIGH, motor rotates counterclockwise when looking down at shaft.
