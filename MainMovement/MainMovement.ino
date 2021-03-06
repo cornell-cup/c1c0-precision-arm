@@ -56,8 +56,7 @@ void loop() {
   Serial.print("encoder value: ");
   Serial.println(J3.encoder.getPositionSPI(14));
 
-  //J3.encoder.setZeroSPI(10); //set current encoder position 
+  J3.encoder.setZeroSPI(10); //set current encoder position 
 
-  J3.encoder.resetAMT22(10); //
 
 }
