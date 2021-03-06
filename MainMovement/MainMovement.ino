@@ -3,8 +3,8 @@
 
 MovingSteppersLib J3(47, 22, 10);
 //MovingSteppersLib J5(8, 9, 48);
-double target1 = 0;
-double target2 = 315;
+double target1 = 0.0;
+double target2 = 90.0;
 //int directionPin = 22;
 //int stepPin = 47;
 
@@ -55,5 +55,9 @@ void loop() {
   Serial.println("after second J3 move");
   Serial.print("encoder value: ");
   Serial.println(J3.encoder.getPositionSPI(14));
+
+  //J3.encoder.setZeroSPI(10); //set current encoder position 
+
+  J3.encoder.resetAMT22(10); //
 
 }
