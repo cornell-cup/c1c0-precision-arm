@@ -1,23 +1,32 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
 
-MovingSteppersLib J3(47, 22, 10);
-//MovingSteppersLib J5(8, 9, 48);
+MovingSteppersLib J3(37, 33, 10);
+MovingSteppersLib J5(47, 22, 11);
 double target1 = 0.0;
 double target2 = 90.0;
-//int directionPin = 22;
-//int stepPin = 47;
+int directionPin = 22;
+int stepPin = 47;
 
+unsigned long curTime = 0;
+unsigned long curTime2 = 0;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-//  pinMode(directionPin, OUTPUT);
-//  pinMode(stepPin, OUTPUT);
+  pinMode(directionPin, OUTPUT);
+  pinMode(stepPin, OUTPUT);
 }
 
 void loop() {
 
+
+//   digitalWrite(directionPin, HIGH);
+//   
+//   digitalWrite(stepPin, HIGH);
+//   delayMicroseconds(300);
+//   digitalWrite(stepPin, LOW);
+//   delayMicroseconds(300);
   // put your main code here, to run repeatedly:
   // --> J3:
   Serial.println("Before first J3 move");
@@ -57,6 +66,9 @@ void loop() {
   Serial.println(J3.encoder.getPositionSPI(14));
 
   J3.encoder.setZeroSPI(10); //set current encoder position 
+
+  J5.move(target1, 1);
+  
 
 
 }
