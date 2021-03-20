@@ -1,37 +1,31 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
 
-//Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
-// MovingSetppersLib J1();
-// MovingSetppersLib J2();
-MovingSteppersLib J3(37, 33, 11); 
-// MovingSetppersLib J4();
-MovingSteppersLib J5(47, 22, 10); 
-// MovingSetppersLib J6();
-
 //Storing pins and states for each motor
-MovingSetppersLib motors [6];
-int directionPin [6];
-int stepPin [6];
-volatile int move [6]; //volatile because changed in ISR
+MovingSteppersLib motors[6] {{0,0,0},{0,0,0},{37, 33, 11},{0,0,0},{47, 22, 10},{0,0,0}};  //Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
+int stepPin[6] = {0,0,37,0,47,0}; 
+int directionPin[6] = {0,0,33,0,22,0}; 
+volatile int move1 [6]; //volatile because changed in ISR
 volatile int state [6]; //volatile because changed in ISR
 
 //Storing encoder values
-int encoderDiff[6];
-int encoderTarget[6];
-int targetAngle[6];
+float encoderDiff[6];  // units of encoder steps
+float encoderTarget[6];  // units of encoder steps
+float targetAngle[6];   // units of degrees
+float encoderPos;   // units of encoder steps
 
 void setup()
 {
   Serial.begin(9600); //Baud Rate
 
-  motors = {J1, J2, J3, J4, J5, J6}; //Populate motors array
+  for (int i=0; i<6; i++){ //for each motor
 
-  for (int i=0; i++; i<6;){ //for each motor
+    targetAngle[i] = 60;   // used for testing, this will be an input from object detection
+    
     pinMode(directionPin[i], OUTPUT); //set direction and step pins as outputs
     pinMode(stepPin[i], OUTPUT);
 
-    move[i] = 1; //default is to move all
+    move1[i] = 0; //default is to move1 all
 
     encoderTarget[i] = targetAngle[i] * 45.51111; //map degree to encoder steps
     encoderPos = motors[i].encoder.getPositionSPI(14); //get starting encoder position
@@ -60,15 +54,14 @@ void setup()
 ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 {
   TCNT1 = 65518;            // preload timer to 300 us
-
-  for (int i=0; i++; i<6;){
-    if (move[i]) { //if motor should move
+  for (int i=0; i<6; i++){
+    if (move1[i]) { //if motor should move1
       if (encoderDiff[i] > 10 || encoderDiff[i] < 10){ //if not within tolerance
         state[i] = !state[i]; //toggle state
         digitalWrite(stepPin[i], state[i]); //write to step pin
       }
       else {
-        move[i] = 0; //stop moving motor if location reached
+        move1[i] = 0; //stop moving motor if location reached
       }
     }
   }
@@ -76,7 +69,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
 void loop()
 {
-  for (int i=0; i++; i<6){
+  for (int i=0; i<6; i++){
     checkDir(i); 
   }
 }
