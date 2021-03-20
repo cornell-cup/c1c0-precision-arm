@@ -1,66 +1,52 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
 
-#define ledPin 13
-
-MovingSteppersLib J5(47, 22, 10); //instantiate the motors
+//Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
+// MovingSetppersLib J1();
+// MovingSetppersLib J2();
 MovingSteppersLib J3(37, 33, 11); 
+// MovingSetppersLib J4();
+MovingSteppersLib J5(47, 22, 10); 
+// MovingSetppersLib J6();
 
+//Storing pins and states for each motor
+MovingSetppersLib motors [6];
+int directionPin [6];
+int stepPin [6];
+volatile int move [6]; //volatile because changed in ISR
+volatile int state [6]; //volatile because changed in ISR
 
-double target1 = 0.0;
-double target2 = 90.0;
-
-int directionPinJ3 = 33;
-int stepPinJ3 = 37;
-int moveJ3 = 0;
-int stateJ3 = LOW;
-
-
-int directionPinJ5 = 22;
-int stepPinJ5 = 47;
-int moveJ5 = 0;
-int stateJ5 = LOW;
-
-int targetAngle;
-
-int encoderPos[6]; //put values in array
+//Storing encoder values
 int encoderDiff[6];
 int encoderTarget[6];
 int targetAngle[6];
 
 void setup()
 {
-  Serial.begin(9600);
-  pinMode(ledPin, OUTPUT);
+  Serial.begin(9600); //Baud Rate
 
-  pinMode(directionPinJ5, OUTPUT);
-  pinMode(stepPinJ5, OUTPUT);
+  motors = {J1, J2, J3, J4, J5, J6}; //Populate motors array
 
-  moveJ5 = 1;
+  for (int i=0; i++; i<6;){ //for each motor
+    pinMode(directionPin[i], OUTPUT); //set direction and step pins as outputs
+    pinMode(stepPin[i], OUTPUT);
 
-  pinMode(directionPinJ3, OUTPUT);
-  pinMode(stepPinJ3, OUTPUT);
+    move[i] = 1; //default is to move all
 
-  moveJ3 = 1;
+    encoderTarget[i] = targetAngle[i] * 45.51111; //map degree to encoder steps
+    encoderPos = motors[i].encoder.getPositionSPI(14); //get starting encoder position
+    encoderDiff[i] = encoderTarget[i] - encoderPos; //calculate difference between target and current
 
-  targetAngle = 60;
-  
-  encoderTarget = targetAngle * 45.51111;
-  encoderPosition = J5.encoder.getPositionSPI(14);
-//  Serial.println(encoderTarget);
-//  Serial.println(encoderPosition);
-  encoderDiff = encoderTarget - encoderPosition;
-
-    // --> set moving direction
-  if(encoderDiff > 0){
-      digitalWrite(directionPinJ5, HIGH);
+    //setting direction based on difference
+    if(encoderDiff[i] > 0){ 
+      digitalWrite(directionPin[i], HIGH);
+    }
+    else{
+      digitalWrite(directionPin[i], LOW);
+    }
   }
-  else{
-      digitalWrite(directionPinJ5, LOW);
-  }
-
   
-  // initialize timer1 
+  // initialize interrupt timer1 
   noInterrupts();           // disable all interrupts
   TCCR1A = 0;
   TCCR1B = 0;
@@ -71,106 +57,34 @@ void setup()
   interrupts();             // enable all interrupts
 }
 
-ISR(TIMER1_OVF_vect)        // interrupt service routine that wraps a user defined function supplied by attachInterrupt
+ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 {
-  TCNT1 = 65518;            // preload timer
+  TCNT1 = 65518;            // preload timer to 300 us
 
-  digitalWrite(ledPin, digitalRead(ledPin) ^ 1);
-
-   if (moveJ3) { // if J3 should move
-    //Serial.println(encoderDiff);
-    if (encoderDiff > 10 || encoderDiff < 10){
-      stateJ3 = !stateJ3;
-      digitalWrite(stepPinJ3, stateJ3);
-    }
-    else {
-      moveJ3 = 0;
-    }
-   }
-  
-  if (moveJ5) { // if J5 should move
-    //Serial.println(encoderDiff);
-    if (encoderDiff > 10 || encoderDiff < 10){
-      stateJ5 = !stateJ5;
-      digitalWrite(stepPinJ5, stateJ5);
-    }
-    else {
-      moveJ5 = 0;
+  for (int i=0; i++; i<6;){
+    if (move[i]) { //if motor should move
+      if (encoderDiff[i] > 10 || encoderDiff[i] < 10){ //if not within tolerance
+        state[i] = !state[i]; //toggle state
+        digitalWrite(stepPin[i], state[i]); //write to step pin
+      }
+      else {
+        move[i] = 0; //stop moving motor if location reached
+      }
     }
   }
-
-
-  
 }
 
 void loop()
 {
-
-  Serial.println(encoderTarget);
-  Serial.println(encoderPosition);
-  encoderTarget = targetAngle * 45.51111; //encoder step convertion 
-  
-  encoderPosition = J5.encoder.getPositionSPI(14);
-  encoderDiff = encoderTarget - encoderPosition;
-  // int prevEncoder = encoderPosition;
-  // int attempt = 0;
-
-
-  //J5
-  if (abs(encoderDiff) >= 8192) { //angle > 180 (encoder units)
-        if (encoderDiff > 0) {
-         digitalWrite(directionPinJ5, LOW); //J3 Clockwise is LOW
-        }
-        else {
-         digitalWrite(directionPinJ5, HIGH);
-        
-      }
-   }
-   else {
-        if(encoderDiff > 0){
-            digitalWrite(directionPinJ5, HIGH);
-          
-        }
-        else {
-            digitalWrite(directionPinJ5, LOW);
-          
-        }
-
-    }
-
-  // J3
-  encoderPosition = J3.encoder.getPositionSPI(14);
-  encoderDiff = encoderTarget - encoderPosition;
-  // int prevEncoder = encoderPosition;
-  // int attempt = 0;
-
-
-  if (abs(encoderDiff) >= 8192) { //angle > 180 (encoder units)
-        if (encoderDiff > 0) {
-         digitalWrite(directionPinJ3, LOW); //J3 Clockwise is LOW
-        }
-        else {
-         digitalWrite(directionPinJ3, HIGH);
-        
-      }
-   }
-   else {
-        if(encoderDiff > 0){
-            digitalWrite(directionPinJ3, HIGH);
-          
-        }
-        else {
-            digitalWrite(directionPinJ3, LOW);
-          
-        }
-
-    }
-  
+  for (int i=0; i++; i<6){
+    checkDir(i); 
+  }
 }
 
-void checkDir(MovingSteppersLib motor,int motorNum,int directionPin){
-  encoderPosition[motorNum] = motor.encoder.getPositionSPI(14);
-  encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPosition[motorNum];
+void checkDir(int motorNum){ //checks that motor is moving in right direction and switches if not
+
+  encoderPos = motors[motorNum].encoder.getPositionSPI(14);
+  encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos;
 
   if (abs(encoderDiff[motorNum]) >= 8192) { //angle > 180 (encoder units)
         if (encoderDiff[motorNum] > 0) {
@@ -178,18 +92,14 @@ void checkDir(MovingSteppersLib motor,int motorNum,int directionPin){
         }
         else {
         digitalWrite(directionPin[motorNum], HIGH);
-        
-      }
+        }
    }
    else {
         if(encoderDiff[motorNum] > 0){
-            digitalWrite(directionPin[motorNum], HIGH);
-          
+            digitalWrite(directionPin[motorNum], HIGH); 
         }
         else {
             digitalWrite(directionPin[motorNum], LOW);
-          
         }
-
     }
 }
