@@ -4,9 +4,9 @@
 #define MAX_ENCODER_VAL 16383
 
 //Storing pins and states for each motor
-MovingSteppersLib motors[6] {{31,37,10},{23,27,11},{37, 33, 11},{0,0,0},{47, 22, 10},{0,0,0}};  //Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
-int stepPin[6] = {31,23,0,0,0,0}; 
-int directionPin[6] = {37,27,0,0,0,0}; 
+MovingSteppersLib motors[6] {{31,37,10},{23,27,10},{23,27,12},{31,37,41},{38, 36, 10},{0,0,0}};  //Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
+int stepPin[6] = {31,23,23,31,38,0}; 
+int directionPin[6] = {37,27,27,37,36,0}; 
 volatile int move [6]; //volatile because changed in ISR
 volatile int state [6]; //volatile because changed in ISR
 
@@ -24,20 +24,27 @@ void setup()
 {
   Serial.begin(9600); //Baud Rate
 
-  //motors[1].encoder.setZeroSPI(11);
+  //motors[3].encoder.setZeroSPI(41);
+  //motors[4].encoder.setZeroSPI(10);
   for (int i=0; i<6; i++){ //for each motor
 
     targetAngle[i] = 0;   // used for testing, this will be an input from object detection
-    targetAngle[0] = 30;
-    targetAngle[1] = 90;
+    //targetAngle[0] = 30;
+   //targetAngle[1] = 90;
+    //targetAngle[2] = 30; 
+   // targetAngle[3] = 30;
+   targetAngle[4] = 0; 
     
     pinMode(directionPin[i], OUTPUT); //set direction and step pins as outputs
     pinMode(stepPin[i], OUTPUT);
 
     move[i] = 0; //default is to move none
    
-    move[0] = 1;
-    move[1] = 1;
+    //move[0] = 1; //enable j1
+    //move[1] = 1; // enable j2
+    //move[2] = 1; // enable j3 
+    //move[3] = 1; //enable j4
+    move[4] = 1; //enable j5
    
     encoderTarget[i] = targetAngle[i] * 45.51111; //map degree to encoder steps
     encoderPos = motors[i].encoder.getPositionSPI(14); //get starting encoder position
@@ -66,9 +73,12 @@ void setup()
 ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 {
   TCNT1 = 65518;            // preload timer to 300 us
+
+ 
   for (int i=0; i<6; i++){
 
-    nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i]));
+    // nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i])); // 2nd condition to check if 359degrees is close enough to 0
+    nottolerant = abs(encoderDiff[i]) > 10; // we dont need the extra condition above bc we never pass through zero
     
     if (move[i]) { //if motor should move
       if (nottolerant){ //if not within tolerance
@@ -80,18 +90,13 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
       }
     }
   }
-  //Serial.println(motors[1].encoder.getPositionSPI(14));
+  Serial.println(motors[4].encoder.getPositionSPI(14));
 }
 
 void loop()
 {
   for (int i=0; i<6; i++){
-    if (i == 0) {
-        checkDirThroughZero(i); //J1
-    }
-    else {
-        checkDirLongWay(i); //J2
-    }
+     checkDirLongWay(i); 
   }
 }
 
@@ -99,8 +104,8 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
 
   encoderPos = motors[motorNum].encoder.getPositionSPI(14);
   
-  if ((MAX_ENCODER_VAL - 10 < encoderPos) && (encoderPos < MAX_ENCODER_VAL)) {
-    encoderPos = 0;
+  if ((MAX_ENCODER_VAL - 10 < encoderPos) && (encoderPos < MAX_ENCODER_VAL)) { 
+    encoderPos = MAX_ENCODER_VAL;
   }
   
   encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos;
@@ -114,25 +119,25 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
 }
 
 
-void checkDirThroughZero(int motorNum){ //checks that motor is moving in right direction and switches if not
-
-  encoderPos = motors[motorNum].encoder.getPositionSPI(14);
-  encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos;
-
-  if (abs(encoderDiff[motorNum]) >= 8192) { //angle > 180 (encoder units)
-        if (encoderDiff[motorNum] > 0) {
-         digitalWrite(directionPin[motorNum], reversed[motorNum]); //J3 Clockwise is LOW
-        }
-        else {
-        digitalWrite(directionPin[motorNum], !reversed[motorNum]);
-        }
-   }
-   else {
-        if(encoderDiff[motorNum] > 0){
-            digitalWrite(directionPin[motorNum], !reversed[motorNum]); 
-        }
-        else {
-            digitalWrite(directionPin[motorNum], reversed[motorNum]);
-        }
-    }
-}
+//void checkDirThroughZero(int motorNum){ //checks that motor is moving in right direction and switches if not
+//
+//  encoderPos = motors[motorNum].encoder.getPositionSPI(14);
+//  encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos;
+//
+//  if (abs(encoderDiff[motorNum]) >= 8192) { //angle > 180 (encoder units)
+//        if (encoderDiff[motorNum] > 0) {
+//         digitalWrite(directionPin[motorNum], reversed[motorNum]); //J3 Clockwise is LOW
+//        }
+//        else {
+//        digitalWrite(directionPin[motorNum], !reversed[motorNum]);
+//        }
+//   }
+//   else {
+//        if(encoderDiff[motorNum] > 0){
+//            digitalWrite(directionPin[motorNum], !reversed[motorNum]); 
+//        }
+//        else {
+//            digitalWrite(directionPin[motorNum], reversed[motorNum]);
+//        }
+//    }
+//}
