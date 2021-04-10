@@ -2,21 +2,42 @@
 #include <MotorEncoderLib.h>
 
 #define MAX_ENCODER_VAL 16383
+// step pins
+int s1 = 38;
+int s2 = 38;
+int s3 = 23;
+int s4 = 31;
+int s5 = 38;
+int s6 = 44;
+// direction pins
+int d1 = 36;
+int d2 = 36;
+int d3 = 26;
+int d4 = 37;
+int d5 = 36;
+int d6 = 32;
+//chip select pins
+int c1 = 8;
+int c2 = 9;
+int c3 = 10;
+int c4 = 11;
+int c5 = 12;
+int c6 = 13;
 
 //Storing pins and states for each motor
-MovingSteppersLib motors[6] {{31,37,10},{23,27,10},{23,27,12},{31,37,41},{38, 36, 10},{0,0,0}};  //Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
-int stepPin[6] = {31,23,23,31,38,0}; 
-int directionPin[6] = {37,27,27,37,36,0}; 
+MovingSteppersLib motors[6] {{s1,d1,c1},{s2,d2,c2},{s3,d3,c3},{s4,d4,c4},{s5,d5,c5},{s6,d6,c6}};  //Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
+int stepPin[6] = {s1,s2,s3,s4,s5,s6}; 
+int directionPin[6] = {d1,d2,d3,d4,d5,d6};  
 volatile int move [6]; //volatile because changed in ISR
 volatile int state [6]; //volatile because changed in ISR
 
-int reversed[6] = {1, 0, 0, 1, 0, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
+int reversed[6] = {1, 0, 0, 1, 1, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
 
 //Storing encoder values
 float encoderDiff[6];  // units of encoder steps
 float encoderTarget[6];  // units of encoder steps
 float targetAngle[6];   // units of degrees
-float encoderPos;   // units of encoder steps
+float encoderPos[6];   // units of encoder steps
 
 volatile int nottolerant; // motor not within expected position
 
@@ -24,16 +45,18 @@ void setup()
 {
   Serial.begin(9600); //Baud Rate
 
-  //motors[3].encoder.setZeroSPI(41);
-  //motors[4].encoder.setZeroSPI(10);
+  //motors[0].encoder.setZeroSPI(c1);
+  //motors[2].encoder.setZeroSPI(c2);
+  //motors[3].encoder.setZeroSPI(c3);
+  //motors[4].encoder.setZeroSPI(c4);
   for (int i=0; i<6; i++){ //for each motor
 
-    targetAngle[i] = 0;   // used for testing, this will be an input from object detection
-    //targetAngle[0] = 30;
-   //targetAngle[1] = 90;
-    //targetAngle[2] = 30; 
+   targetAngle[i] = 0;   // used for testing, this will be an input from object detection
+   //targetAngle[0] = 0;
+   targetAngle[1] = 45;
+   targetAngle[2] = 45; 
    // targetAngle[3] = 30;
-   targetAngle[4] = 0; 
+   //targetAngle[4] = 100; 
     
     pinMode(directionPin[i], OUTPUT); //set direction and step pins as outputs
     pinMode(stepPin[i], OUTPUT);
@@ -42,21 +65,13 @@ void setup()
    
     //move[0] = 1; //enable j1
     //move[1] = 1; // enable j2
-    //move[2] = 1; // enable j3 
+    move[2] = 1; // enable j3 
     //move[3] = 1; //enable j4
-    move[4] = 1; //enable j5
+    //move[4] = 1; //enable j5
    
     encoderTarget[i] = targetAngle[i] * 45.51111; //map degree to encoder steps
-    encoderPos = motors[i].encoder.getPositionSPI(14); //get starting encoder position
-    encoderDiff[i] = encoderTarget[i] - encoderPos; //calculate difference between target and current
-
-    //setting direction based on difference
-    if(encoderDiff[i] > 0){ 
-      digitalWrite(directionPin[i], HIGH);
-    }
-    else{
-      digitalWrite(directionPin[i], LOW);
-    }
+    encoderPos[i] = motors[i].encoder.getPositionSPI(14); //get starting encoder position
+    encoderDiff[i] = encoderTarget[i] - encoderPos[i]; //calculate difference between target and current
   }
   
   // initialize interrupt timer1 
@@ -77,8 +92,8 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
  
   for (int i=0; i<6; i++){
 
-    // nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i])); // 2nd condition to check if 359degrees is close enough to 0
-    nottolerant = abs(encoderDiff[i]) > 10; // we dont need the extra condition above bc we never pass through zero
+    nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i])); // 2nd condition to check if 359degrees is close enough to 0
+    //nottolerant = abs(encoderDiff[i]) > 10; // we dont need the extra condition above bc we never pass through zero
     
     if (move[i]) { //if motor should move
       if (nottolerant){ //if not within tolerance
@@ -90,7 +105,6 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
       }
     }
   }
-  Serial.println(motors[4].encoder.getPositionSPI(14));
 }
 
 void loop()
@@ -102,13 +116,13 @@ void loop()
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
 
-  encoderPos = motors[motorNum].encoder.getPositionSPI(14);
+  encoderPos[motorNum] = motors[motorNum].encoder.getPositionSPI(14);
   
-  if ((MAX_ENCODER_VAL - 10 < encoderPos) && (encoderPos < MAX_ENCODER_VAL)) { 
-    encoderPos = MAX_ENCODER_VAL;
+  if ((MAX_ENCODER_VAL - 40) < encoderPos[motorNum]) { 
+    encoderPos[motorNum] = 0;
   }
   
-  encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos;
+  encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos[motorNum];
 
   if(encoderDiff[motorNum] > 0){
       digitalWrite(directionPin[motorNum], !reversed[motorNum]); 
@@ -116,6 +130,9 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
   else {
       digitalWrite(directionPin[motorNum], reversed[motorNum]);
   }
+  //Serial.println(digitalRead(directionPin[0]));
+  //Serial.println(encoderPos[1]);
+  //Serial.println(encoderPos[2]);
 }
 
 
