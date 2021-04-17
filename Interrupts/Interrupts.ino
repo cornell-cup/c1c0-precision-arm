@@ -63,9 +63,20 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
 
    targetAngle[i] = 0;   // used for testing, this will be an input from object detection
-   //targetAngle[0] = 90;
-   targetAngle[1] = 60;
-   //targetAngle[2] = 0; 
+//   targetAngle[0] = 0;
+
+//   targetAngle[1] = 50;
+//   targetAngle[2] = 200;
+   
+//   targetAngle[1] = 100;
+//   targetAngle[2] = 170; 
+////   
+//   targetAngle[1] = 130;
+//   targetAngle[2] = 40; 
+////   
+//   targetAngle[1] = 80;
+//   targetAngle[2] = 170;  
+   
    // targetAngle[3] = 30;
    //targetAngle[4] = 100; 
     
@@ -75,8 +86,8 @@ void setup()
     move[i] = 0; //default is to move none
    
     //move[0] = 1; //enable j1
-    move[1] = 1; // enable j2
-    //move[2] = 1; // enable j3 
+//    move[1] = 1; // enable j2
+//    move[2] = 1; // enable j3 
     //move[3] = 1; //enable j4
     //move[4] = 1; //enable j5
    
@@ -117,27 +128,27 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
     }
   }
     // This is for moving motor to two places
-  if ( !move[0] && !move[1] && !move[2] && !move[3] && !move[4] && !move[5] && (counter==0)) {
-    targetAngle[2] = 100;
-    encoderTarget[2] = targetAngle[2] * 45.51111; //map degree to encoder steps
-    move[2] = 1;
-    encoderDiff[2] = encoderTarget[2] - encoderPos[2];
-    counter++;
-  }
-  if ( !move[0] && !move[1] && !move[2] && !move[3] && !move[4] && !move[5] && (counter==1)) {
-    targetAngle[2] = 80;
-    encoderTarget[2] = targetAngle[2] * 45.51111; //map degree to encoder steps
-    move[2] = 1;
-    encoderDiff[2] = encoderTarget[2] - encoderPos[2];
-    counter++;
-  }
-  if ( !move[0] && !move[1] && !move[2] && !move[3] && !move[4] && !move[5] && (counter==2)) {
-    targetAngle[2] = 100;
-    encoderTarget[2] = targetAngle[2] * 45.51111; //map degree to encoder steps
-    move[2] = 1;
-    encoderDiff[2] = encoderTarget[2] - encoderPos[2];
-    counter++;
-  }
+//  if ( !move[0] && !move[1] && !move[2] && !move[3] && !move[4] && !move[5] && (counter==0)) {
+//    targetAngle[2] = 100;
+//    encoderTarget[2] = targetAngle[2] * 45.51111; //map degree to encoder steps
+//    move[2] = 1;
+//    encoderDiff[2] = encoderTarget[2] - encoderPos[2];
+//    counter++;
+//  }
+//  if ( !move[0] && !move[1] && !move[2] && !move[3] && !move[4] && !move[5] && (counter==1)) {
+//    targetAngle[2] = 80;
+//    encoderTarget[2] = targetAngle[2] * 45.51111; //map degree to encoder steps
+//    move[2] = 1;
+//    encoderDiff[2] = encoderTarget[2] - encoderPos[2];
+//    counter++;
+//  }
+//  if ( !move[0] && !move[1] && !move[2] && !move[3] && !move[4] && !move[5] && (counter==2)) {
+//    targetAngle[2] = 100;
+//    encoderTarget[2] = targetAngle[2] * 45.51111; //map degree to encoder steps
+//    move[2] = 1;
+//    encoderDiff[2] = encoderTarget[2] - encoderPos[2];
+//    counter++;
+//  }
 
 }
 
@@ -164,7 +175,6 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
   }
   else {
       digitalWrite(directionPin[motorNum], reversed[motorNum]);
-//      Serial.println(digitalRead(directionPin[0]));
   }
   //Serial.println(digitalRead(directionPin[0]));
 //  Serial.println(encoderPos[0]);
