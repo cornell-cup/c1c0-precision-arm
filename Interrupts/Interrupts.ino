@@ -12,14 +12,14 @@
 // step pins 
 int s0 = 0;
 int s1 = 23;
-int s2 = 38;
+int s2 = 0;
 int s3 = 0;
 int s4 = 0;
 int s5 = 0;
 // direction pins
 int d0 = 0;
 int d1 = 26;
-int d2 = 36;
+int d2 = 0;
 int d3 = 0;
 int d4 = 0;
 int d5 = 0;
@@ -30,6 +30,8 @@ int c2 = 10;
 int c3 = 11;
 int c4 = 12;
 int c5 = 13;
+
+uint8_t send_buf[2];
 
 volatile int counter = 0;
 
@@ -53,6 +55,7 @@ volatile int nottolerant; // motor not within expected position
 void setup()
 {
   Serial.begin(9600); //Baud Rate
+  Serial1.begin(9600); 
 
 //  motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
 //  motors[1].encoder.setZeroSPI(c1);
@@ -85,7 +88,7 @@ void setup()
 
     move[i] = 0; //default is to move none
    
-    //move[0] = 1; //enable j1
+    //move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
 //    move[1] = 1; // enable j2
 //    move[2] = 1; // enable j3 
     //move[3] = 1; //enable j4
@@ -126,6 +129,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
         move[i] = 0; //stop moving motor if location reached
       }
     }
+   // Serial.println(motors[1].encoder.getPositionSPI(14));
   }
     // This is for moving motor to two places
 //  if ( !move[0] && !move[1] && !move[2] && !move[3] && !move[4] && !move[5] && (counter==0)) {
@@ -168,7 +172,7 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
   }
   
   encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos[motorNum];
-//  Serial.println(encoderDiff[0]);
+//  Serial.println(eencoderDiff[0]);
 
   if(encoderDiff[motorNum] > 0){
       digitalWrite(directionPin[motorNum], !reversed[motorNum]); 
@@ -176,6 +180,14 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
   else {
       digitalWrite(directionPin[motorNum], reversed[motorNum]);
   }
+  Serial.println(motors[1].encoder.getPositionSPI(14));
+  // number is flipped, please fix 
+  send_buf[0] = (motors[1].encoder.getPositionSPI(14) >> 8) & 255;  
+  send_buf[1] =  motors[1].encoder.getPositionSPI(14) & 255; 
+  Serial1.write(send_buf, sizeof(send_buf));
+  //Serial.println(send_buf, 2);
+   //Serial.println(sizeof(motors[1].encoder.getPositionSPI(14)));
+   
   //Serial.println(digitalRead(directionPin[0]));
 //  Serial.println(encoderPos[0]);
 //  Serial.println(encoderPos[2]);
