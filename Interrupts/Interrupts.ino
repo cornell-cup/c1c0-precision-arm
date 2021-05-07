@@ -33,6 +33,7 @@ int c5 = 13;
 
 // find position with buffer
 uint16_t bufpos[6];
+uint16_t targs[6];
 uint8_t send_buf[2];
 
 
@@ -116,7 +117,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
         move[i] = 0; //stop moving motor if location reached
       }
     }
-  //Serial.println(motors[1].encoder.getPositionSPI(14));
+  writePos();
   
   
   }
@@ -150,13 +151,17 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
 }
 
 void writePos(){
+
+  for (int i=0; i<6; i++){
+     bufpos[i] = getPos(i); 
+  }
   
-  bufpos[0] = getPos(0);
-  bufpos[1] = getPos(1); 
-  bufpos[2] = getPos(2);
-  bufpos[3] = getPos(3);
-  bufpos[4] = getPos(4);
-  bufpos[5] = getPos(5);
+//  bufpos[0] = getPos(0);
+//  bufpos[1] = getPos(1); 
+//  bufpos[2] = getPos(2);
+//  bufpos[3] = getPos(3);
+//  bufpos[4] = getPos(4);
+//  bufpos[5] = getPos(5);
   
   Serial1.write(bufpos, sizeof(bufpos));
 }
@@ -170,26 +175,17 @@ int getPos(int motorNum){
   
 }
 
-
-//void checkDirThroughZero(int motorNum){ //checks that motor is moving in right direction and switches if not
-//
-//  encoderPos = motors[motorNum].encoder.getPositionSPI(14);
-//  encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos;
-//
-//  if (abs(encoderDiff[motorNum]) >= 8192) { //angle > 180 (encoder units)
-//        if (encoderDiff[motorNum] > 0) {
-//         digitalWrite(directionPin[motorNum], reversed[motorNum]); //J3 Clockwise is LOW
-//        }
-//        else {
-//        digitalWrite(directionPin[motorNum], !reversed[motorNum]);
-//        }
-//   }
-//   else {
-//        if(encoderDiff[motorNum] > 0){
-//            digitalWrite(directionPin[motorNum], !reversed[motorNum]); 
-//        }
-//        else {
-//            digitalWrite(directionPin[motorNum], reversed[motorNum]);
-//        }
-//    }
-//}
+void setTargets(){
+  targs = Serial1.read()
+  
+  for (int i=0; i<6; i++){
+     targetAngle[i] = targs[i]; 
+  }
+  
+//  targetAngle[0] = targs[0];
+//  targetAngle[1] = targs[1];
+//  targetAngle[2] = targs[2];
+//  targetAngle[3] = targs[3];
+//  targetAngle[4] = targs[4];
+//  targetAngle[5] = targs[5];
+}
