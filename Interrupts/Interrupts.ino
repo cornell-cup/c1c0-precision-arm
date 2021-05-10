@@ -31,12 +31,7 @@ int c3 = 11;
 int c4 = 12;
 int c5 = 13;
 
-// find position with buffer
-uint16_t bufpos[6];
-uint16_t targs[6];
-uint8_t send_buf[2];
-
-
+uint8_t send_buf[4];
 
 volatile int counter = 0;
 
@@ -69,7 +64,24 @@ void setup()
   //motors[4].encoder.setZeroSPI(c4);
   //motors[5].encoder.setZeroSPI(c5);
   for (int i=0; i<6; i++){ //for each motor
-     
+
+   targetAngle[i] = 0;   // used for testing, this will be an input from object detection
+//   targetAngle[0] = 0;
+
+//   targetAngle[1] = 50;
+//   targetAngle[2] = 200;
+   
+//   targetAngle[1] = 100;
+//   targetAngle[2] = 170; 
+////   
+//   targetAngle[1] = 130;
+//   targetAngle[2] = 40; 
+////   
+//   targetAngle[1] = 80;
+//   targetAngle[2] = 170;  
+   
+   // targetAngle[3] = 30;
+   //targetAngle[4] = 100; 
     
     pinMode(directionPin[i], OUTPUT); //set direction and step pins as outputs
     pinMode(stepPin[i], OUTPUT);
@@ -117,11 +129,31 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
         move[i] = 0; //stop moving motor if location reached
       }
     }
-  writePos();
-  
-  
+   // Serial.println(motors[1].encoder.getPositionSPI(14));
   }
- 
+    // This is for moving motor to two places
+//  if ( !move[0] && !move[1] && !move[2] && !move[3] && !move[4] && !move[5] && (counter==0)) {
+//    targetAngle[2] = 100;
+//    encoderTarget[2] = targetAngle[2] * 45.51111; //map degree to encoder steps
+//    move[2] = 1;
+//    encoderDiff[2] = encoderTarget[2] - encoderPos[2];
+//    counter++;
+//  }
+//  if ( !move[0] && !move[1] && !move[2] && !move[3] && !move[4] && !move[5] && (counter==1)) {
+//    targetAngle[2] = 80;
+//    encoderTarget[2] = targetAngle[2] * 45.51111; //map degree to encoder steps
+//    move[2] = 1;
+//    encoderDiff[2] = encoderTarget[2] - encoderPos[2];
+//    counter++;
+//  }
+//  if ( !move[0] && !move[1] && !move[2] && !move[3] && !move[4] && !move[5] && (counter==2)) {
+//    targetAngle[2] = 100;
+//    encoderTarget[2] = targetAngle[2] * 45.51111; //map degree to encoder steps
+//    move[2] = 1;
+//    encoderDiff[2] = encoderTarget[2] - encoderPos[2];
+//    counter++;
+//  }
+
 }
 
 void loop()
@@ -148,44 +180,36 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
   else {
       digitalWrite(directionPin[motorNum], reversed[motorNum]);
   }
-}
-
-void writePos(){
-
-  for (int i=0; i<6; i++){
-     bufpos[i] = getPos(i); 
-  }
-  
-//  bufpos[0] = getPos(0);
-//  bufpos[1] = getPos(1); 
-//  bufpos[2] = getPos(2);
-//  bufpos[3] = getPos(3);
-//  bufpos[4] = getPos(4);
-//  bufpos[5] = getPos(5);
-  
-  Serial1.write(bufpos, sizeof(bufpos));
-}
-
-int getPos(int motorNum){
-
-  send_buf[0] =  motors[motorNum].encoder.getPositionSPI(14) >> 8) & 255;  
-  send_buf[1] =  motors[motorNum].encoder.getPositionSPI(14) & 255; 
-
-  return send_buf;
+  Serial.println(motors[1].encoder.getPositionSPI(14));
+  // number is flipped, please fix 
+  send_buf[0] = (motors[1].encoder.getPositionSPI(14) >> 8) & 255;  
+  send_buf[1] =  motors[1].encoder.getPositionSPI(14) & 255; 
+  send_buf[2] = (motors[2].encoder.getPositionSPI(14) >> 8) & 255;  
+  send_buf[3] =  motors[2].encoder.getPositionSPI(14) & 255;
+  Serial1.write(send_buf, sizeof(send_buf));
   
 }
 
-void setTargets(){
-  targs = Serial1.read()
-  
-  for (int i=0; i<6; i++){
-     targetAngle[i] = targs[i]; 
-  }
-  
-//  targetAngle[0] = targs[0];
-//  targetAngle[1] = targs[1];
-//  targetAngle[2] = targs[2];
-//  targetAngle[3] = targs[3];
-//  targetAngle[4] = targs[4];
-//  targetAngle[5] = targs[5];
-}
+
+//void checkDirThroughZero(int motorNum){ //checks that motor is moving in right direction and switches if not
+//
+//  encoderPos = motors[motorNum].encoder.getPositionSPI(14);
+//  encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos;
+//
+//  if (abs(encoderDiff[motorNum]) >= 8192) { //angle > 180 (encoder units)
+//        if (encoderDiff[motorNum] > 0) {
+//         digitalWrite(directionPin[motorNum], reversed[motorNum]); //J3 Clockwise is LOW
+//        }
+//        else {
+//        digitalWrite(directionPin[motorNum], !reversed[motorNum]);
+//        }
+//   }
+//   else {
+//        if(encoderDiff[motorNum] > 0){
+//            digitalWrite(directionPin[motorNum], !reversed[motorNum]); 
+//        }
+//        else {
+//            digitalWrite(directionPin[motorNum], reversed[motorNum]);
+//        }
+//    }
+//}
