@@ -24,14 +24,14 @@ int d3 = 0;
 int d4 = 0;
 int d5 = 0;
 //chip select pins
-int c0 = 8;
-int c1 = 9;
-int c2 = 10;
-int c3 = 11;
-int c4 = 12;
-int c5 = 13;
+int c0 = 0;
+int c1 = 10;
+int c2 = 9;
+int c3 = 0;
+int c4 = 0;
+int c5 = 0;
 
-uint8_t send_buf[4];
+uint8_t send_buf[12];
 
 volatile int counter = 0;
 
@@ -65,10 +65,10 @@ void setup()
   //motors[5].encoder.setZeroSPI(c5);
   for (int i=0; i<6; i++){ //for each motor
 
-   targetAngle[i] = 0;   // used for testing, this will be an input from object detection
+//   targetAngle[i] = 20;   // used for testing, this will be an input from object detection
 //   targetAngle[0] = 0;
 
-//   targetAngle[1] = 50;
+   targetAngle[1] = 80;
 //   targetAngle[2] = 200;
    
 //   targetAngle[1] = 100;
@@ -77,7 +77,7 @@ void setup()
 //   targetAngle[1] = 130;
 //   targetAngle[2] = 40; 
 ////   
-//   targetAngle[1] = 80;
+  // targetAngle[1] = 80;
 //   targetAngle[2] = 170;  
    
    // targetAngle[3] = 30;
@@ -89,7 +89,7 @@ void setup()
     move[i] = 0; //default is to move none
    
     //move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-//    move[1] = 1; // enable j2
+    move[1] = 1; // enable j2
 //    move[2] = 1; // enable j3 
     //move[3] = 1; //enable j4
     //move[4] = 1; //enable j5
@@ -161,6 +161,10 @@ void loop()
   for (int i=0; i<6; i++){
      checkDirLongWay(i); 
   }
+
+  //delay(500);
+  makeSerBuffers();
+//Serial.println(motors[1].encoder.getPositionSPI(14)); 
 }
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
@@ -172,7 +176,6 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
   }
   
   encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos[motorNum];
-//  Serial.println(eencoderDiff[0]);
 
   if(encoderDiff[motorNum] > 0){
       digitalWrite(directionPin[motorNum], !reversed[motorNum]); 
@@ -180,15 +183,34 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
   else {
       digitalWrite(directionPin[motorNum], reversed[motorNum]);
   }
-  Serial.println(motors[1].encoder.getPositionSPI(14));
-  // number is flipped, please fix 
-  send_buf[0] = (motors[1].encoder.getPositionSPI(14) >> 8) & 255;  
-  send_buf[1] =  motors[1].encoder.getPositionSPI(14) & 255; 
-  send_buf[2] = (motors[2].encoder.getPositionSPI(14) >> 8) & 255;  
-  send_buf[3] =  motors[2].encoder.getPositionSPI(14) & 255;
-  Serial1.write(send_buf, sizeof(send_buf));
-  
+ 
+//  send_buf[0] = (motors[0].encoder.getPositionSPI(14) >> 8) & 255;  
+//  send_buf[1] =  motors[0].encoder.getPositionSPI(14) & 255; 
+//  send_buf[2] = (motors[1].encoder.getPositionSPI(14) >> 8) & 255;  
+//  send_buf[3] =  motors[1].encoder.getPositionSPI(14) & 255;
+//  send_buf[4] = (motors[2].encoder.getPositionSPI(14) >> 8) & 255;  
+//  send_buf[5] =  motors[2].encoder.getPositionSPI(14) & 255; 
+//  send_buf[6] = (motors[3].encoder.getPositionSPI(14) >> 8) & 255;  
+//  send_buf[7] =  motors[3].encoder.getPositionSPI(14) & 255;
+//  send_buf[8] = (motors[4].encoder.getPositionSPI(14) >> 8) & 255;  
+//  send_buf[9] =  motors[4].encoder.getPositionSPI(14) & 255; 
+//  send_buf[10] = (motors[5].encoder.getPositionSPI(14) >> 8) & 255;  
+//  send_buf[11] =  motors[5].encoder.getPositionSPI(14) & 255;
+//  Serial1.write(send_buf, sizeof(send_buf));
+//  
 }
+
+void makeSerBuffers(){
+
+  for (int i=0; i<6; i++) {
+    send_buf[2*i] = (motors[i].encoder.getPositionSPI(14) >> 8) & 255;  
+    send_buf[2*i+1] =  motors[i].encoder.getPositionSPI(14) & 255;  
+  }
+ // delay(100);
+  Serial1.write(send_buf, sizeof(send_buf));
+}
+
+
 
 
 //void checkDirThroughZero(int motorNum){ //checks that motor is moving in right direction and switches if not
