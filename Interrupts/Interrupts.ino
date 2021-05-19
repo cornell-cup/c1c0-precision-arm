@@ -31,7 +31,7 @@ int c3 = 0;
 int c4 = 0;
 int c5 = 0;
 
-uint8_t send_buf[12];
+uint8_t send_buf[16];
 
 volatile int counter = 0;
 
@@ -56,6 +56,11 @@ void setup()
 {
   Serial.begin(9600); //Baud Rate
   Serial1.begin(9600); 
+
+  send_buf[0] = 1111
+  send_buf[1] = 1101
+  send_buf[14] = 1111
+  send_buf[15] = 1110
 
 //  motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
 //  motors[1].encoder.setZeroSPI(c1);
@@ -162,8 +167,9 @@ void loop()
      checkDirLongWay(i); 
   }
 
-  //delay(500);
+  nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i]));
   makeSerBuffers();
+  nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i]));
 //Serial.println(motors[1].encoder.getPositionSPI(14)); 
 }
 
@@ -183,30 +189,16 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
   else {
       digitalWrite(directionPin[motorNum], reversed[motorNum]);
   }
- 
-//  send_buf[0] = (motors[0].encoder.getPositionSPI(14) >> 8) & 255;  
-//  send_buf[1] =  motors[0].encoder.getPositionSPI(14) & 255; 
-//  send_buf[2] = (motors[1].encoder.getPositionSPI(14) >> 8) & 255;  
-//  send_buf[3] =  motors[1].encoder.getPositionSPI(14) & 255;
-//  send_buf[4] = (motors[2].encoder.getPositionSPI(14) >> 8) & 255;  
-//  send_buf[5] =  motors[2].encoder.getPositionSPI(14) & 255; 
-//  send_buf[6] = (motors[3].encoder.getPositionSPI(14) >> 8) & 255;  
-//  send_buf[7] =  motors[3].encoder.getPositionSPI(14) & 255;
-//  send_buf[8] = (motors[4].encoder.getPositionSPI(14) >> 8) & 255;  
-//  send_buf[9] =  motors[4].encoder.getPositionSPI(14) & 255; 
-//  send_buf[10] = (motors[5].encoder.getPositionSPI(14) >> 8) & 255;  
-//  send_buf[11] =  motors[5].encoder.getPositionSPI(14) & 255;
-//  Serial1.write(send_buf, sizeof(send_buf));
-//  
+  
 }
 
 void makeSerBuffers(){
 
   for (int i=0; i<6; i++) {
-    send_buf[2*i] = (motors[i].encoder.getPositionSPI(14) >> 8) & 255;  
-    send_buf[2*i+1] =  motors[i].encoder.getPositionSPI(14) & 255;  
+    send_buf[2*i+2] = (motors[i].encoder.getPositionSPI(14) >> 8) & 255;  
+    send_buf[2*i+3] =  motors[i].encoder.getPositionSPI(14) & 255;  
   }
- // delay(100);
+  //delay(1000);
   Serial1.write(send_buf, sizeof(send_buf));
 }
 
