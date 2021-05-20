@@ -12,14 +12,14 @@
 // step pins 
 int s0 = 0;
 int s1 = 23;
-int s2 = 0;
+int s2 = 41;
 int s3 = 0;
 int s4 = 0;
 int s5 = 0;
 // direction pins
 int d0 = 0;
 int d1 = 26;
-int d2 = 0;
+int d2 = 39;
 int d3 = 0;
 int d4 = 0;
 int d5 = 0;
@@ -57,10 +57,10 @@ void setup()
   Serial.begin(9600); //Baud Rate
   Serial1.begin(9600); 
 
-  send_buf[0] = 1111
-  send_buf[1] = 1101
-  send_buf[14] = 1111
-  send_buf[15] = 1110
+  send_buf[0] = 255;
+  send_buf[1] = 254;
+  send_buf[14] = 255;
+  send_buf[15] = 253;
 
 //  motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
 //  motors[1].encoder.setZeroSPI(c1);
@@ -73,11 +73,11 @@ void setup()
 //   targetAngle[i] = 20;   // used for testing, this will be an input from object detection
 //   targetAngle[0] = 0;
 
-   targetAngle[1] = 80;
-//   targetAngle[2] = 200;
+   targetAngle[1] = 50;
+   targetAngle[2] = 45;
    
 //   targetAngle[1] = 100;
-//   targetAngle[2] = 170; 
+//   targetAngle[2] = 90; 
 ////   
 //   targetAngle[1] = 130;
 //   targetAngle[2] = 40; 
@@ -95,7 +95,7 @@ void setup()
    
     //move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
     move[1] = 1; // enable j2
-//    move[2] = 1; // enable j3 
+    move[2] = 1; // enable j3 
     //move[3] = 1; //enable j4
     //move[4] = 1; //enable j5
    
@@ -167,10 +167,9 @@ void loop()
      checkDirLongWay(i); 
   }
 
-  nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i]));
   makeSerBuffers();
-  nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i]));
 //Serial.println(motors[1].encoder.getPositionSPI(14)); 
+//Serial.println(motors[2].encoder.getPositionSPI(14));
 }
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
@@ -198,7 +197,7 @@ void makeSerBuffers(){
     send_buf[2*i+2] = (motors[i].encoder.getPositionSPI(14) >> 8) & 255;  
     send_buf[2*i+3] =  motors[i].encoder.getPositionSPI(14) & 255;  
   }
-  //delay(1000);
+  //delay(500);
   Serial1.write(send_buf, sizeof(send_buf));
 }
 
