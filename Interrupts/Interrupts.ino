@@ -1,3 +1,4 @@
+
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
 
@@ -10,21 +11,21 @@
 */
 
 // step pins 
-int s0 = 0;
+int s0 = 3;
 int s1 = 23;
 int s2 = 41;
 int s3 = 0;
 int s4 = 0;
 int s5 = 0;
 // direction pins
-int d0 = 0;
+int d0 = 2;
 int d1 = 26;
 int d2 = 39;
 int d3 = 0;
 int d4 = 0;
 int d5 = 0;
 //chip select pins
-int c0 = 0;
+int c0 = 8;
 int c1 = 10;
 int c2 = 9;
 int c3 = 0;
@@ -42,7 +43,7 @@ int directionPin[6] = {d0,d1,d2,d3,d4,d5};
 volatile int move [6]; //volatile because changed in ISR
 volatile int state [6]; //volatile because changed in ISR
 
-int reversed[6] = {1, 0, 0, 1, 1, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
+int reversed[6] = {0, 0, 0, 1, 1, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
 
 //Storing encoder values
 volatile float encoderDiff[6];  // units of encoder steps
@@ -55,7 +56,7 @@ volatile int nottolerant; // motor not within expected position
 void setup()
 {
   Serial.begin(9600); //Baud Rate
-  Serial1.begin(9600); 
+//  Serial1.begin(9600); 
 
   send_buf[0] = 255;
   send_buf[1] = 254;
@@ -71,10 +72,10 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
 
 //   targetAngle[i] = 20;   // used for testing, this will be an input from object detection
-//   targetAngle[0] = 0;
+   targetAngle[0] = 290;
 
-   targetAngle[1] = 50;
-   targetAngle[2] = 45;
+//   targetAngle[1] = 50;
+//   targetAngle[2] = 45;
    
 //   targetAngle[1] = 100;
 //   targetAngle[2] = 90; 
@@ -93,9 +94,9 @@ void setup()
 
     move[i] = 0; //default is to move none
    
-    //move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-    move[1] = 1; // enable j2
-    move[2] = 1; // enable j3 
+    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
+    //move[1] = 1; // enable j2
+    //move[2] = 1; // enable j3 
     //move[3] = 1; //enable j4
     //move[4] = 1; //enable j5
    
@@ -167,7 +168,7 @@ void loop()
      checkDirLongWay(i); 
   }
 
-  makeSerBuffers();
+//  makeSerBuffers();
 //Serial.println(motors[1].encoder.getPositionSPI(14)); 
 //Serial.println(motors[2].encoder.getPositionSPI(14));
 }
@@ -198,7 +199,7 @@ void makeSerBuffers(){
     send_buf[2*i+3] =  motors[i].encoder.getPositionSPI(14) & 255;  
   }
   //delay(500);
-  Serial1.write(send_buf, sizeof(send_buf));
+//  Serial1.write(send_buf, sizeof(send_buf));
 }
 
 
