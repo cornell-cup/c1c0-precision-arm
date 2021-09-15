@@ -104,7 +104,7 @@ int MotorEncoderLib::spiWriteRead(int sendByte, int encoder, int releaseLine)
 
   // There is a minimum time requirement after CS goes low before data can be clocked out of the encoder.
   // We will implement that time delay here, however the arduino is not the fastest device so the delay
-  // is likely inherantly there already
+  // is likely inherently there already
   delayMicroseconds(3);
 
   //send the command
@@ -135,11 +135,11 @@ void MotorEncoderLib::setZeroSPI(int encoder)
 
   //this is the time required between bytes as specified in the datasheet.
   //We will implement that time delay here, however the arduino is not the fastest device so the delay
-  //is likely inherantly there already
+  //is likely inherently there already
   delayMicroseconds(3);
 
   spiWriteRead(AMT22_ZERO, encoder, true);
-  delay(250); //250 second delay to allow the encoder to reset
+  delay(250); //250 millisecond delay to allow the encoder to reset
 }
 
 /*
@@ -153,7 +153,7 @@ void MotorEncoderLib::resetAMT22(int encoder)
 
   //this is the time required between bytes as specified in the datasheet.
   //We will implement that time delay here, however the arduino is not the fastest device so the delay
-  //is likely inherantly there already
+  //is likely inherently there already
   delayMicroseconds(3);
 
   spiWriteRead(AMT22_RESET, encoder, true);

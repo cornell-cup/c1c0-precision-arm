@@ -11,28 +11,28 @@
 */
 
 // step pins 
-int s0 = 3;
-int s1 = 23;
-int s2 = 41;
+int s0 = 0;
+int s1 = 0;
+int s2 = 3;
 int s3 = 0;
 int s4 = 0;
 int s5 = 0;
 // direction pins
-int d0 = 2;
-int d1 = 26;
-int d2 = 39;
+int d0 = 0;
+int d1 = 0;
+int d2 = 2;
 int d3 = 0;
 int d4 = 0;
 int d5 = 0;
 //chip select pins
-int c0 = 8;
-int c1 = 10;
+int c0 = 0;
+int c1 = 8;
 int c2 = 9;
 int c3 = 0;
 int c4 = 0;
 int c5 = 0;
 
-uint8_t send_buf[16];
+uint8_t send_buf[10];
 
 volatile int counter = 0;
 
@@ -56,25 +56,25 @@ volatile int nottolerant; // motor not within expected position
 void setup()
 {
   Serial.begin(9600); //Baud Rate
-//  Serial1.begin(9600); 
+  Serial1.begin(9600); 
 
   send_buf[0] = 255;
   send_buf[1] = 254;
-  send_buf[14] = 255;
-  send_buf[15] = 253;
+  send_buf[8] = 255;
+  send_buf[9] = 253;
 
 //  motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
 //  motors[1].encoder.setZeroSPI(c1);
 //  motors[2].encoder.setZeroSPI(c2);
 //  motors[3].encoder.setZeroSPI(c3);
-  //motors[4].encoder.setZeroSPI(c4);
-  //motors[5].encoder.setZeroSPI(c5);
+//  motors[4].encoder.setZeroSPI(c4);
+//  motors[5].encoder.setZeroSPI(c5);
   for (int i=0; i<6; i++){ //for each motor
 
 //   targetAngle[i] = 20;   // used for testing, this will be an input from object detection
-   targetAngle[0] = 290;
+//   targetAngle[0] = 290;
 
-//   targetAngle[1] = 50;
+//   targetAngle[1] = 66;
 //   targetAngle[2] = 45;
    
 //   targetAngle[1] = 100;
@@ -86,19 +86,21 @@ void setup()
   // targetAngle[1] = 80;
 //   targetAngle[2] = 170;  
    
-   // targetAngle[3] = 30;
+    targetAngle[3] = 300;
    //targetAngle[4] = 100; 
     
     pinMode(directionPin[i], OUTPUT); //set direction and step pins as outputs
     pinMode(stepPin[i], OUTPUT);
 
+   
     move[i] = 0; //default is to move none
    
     move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-    //move[1] = 1; // enable j2
-    //move[2] = 1; // enable j3 
-    //move[3] = 1; //enable j4
-    //move[4] = 1; //enable j5
+    move[1] = 1; // enable j2
+    move[2] = 1; // enable j3 
+    move[3] = 1; //enable j4
+    move[4] = 1; //enable j5
+    move[5] = 1; // enable j6
    
     encoderTarget[i] = targetAngle[i] * 45.51111; //map degree to encoder steps
     encoderPos[i] = motors[i].encoder.getPositionSPI(14); //get starting encoder position
@@ -135,7 +137,6 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
         move[i] = 0; //stop moving motor if location reached
       }
     }
-   // Serial.println(motors[1].encoder.getPositionSPI(14));
   }
     // This is for moving motor to two places
 //  if ( !move[0] && !move[1] && !move[2] && !move[3] && !move[4] && !move[5] && (counter==0)) {
@@ -168,9 +169,9 @@ void loop()
      checkDirLongWay(i); 
   }
 
-//  makeSerBuffers();
+  makeSerBuffers();
 //Serial.println(motors[1].encoder.getPositionSPI(14)); 
-//Serial.println(motors[2].encoder.getPositionSPI(14));
+//Serial.println(motors[1].encoder.getPositionSPI(14));
 }
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
@@ -195,11 +196,13 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
 void makeSerBuffers(){
 
   for (int i=0; i<6; i++) {
-    send_buf[2*i+2] = (motors[i].encoder.getPositionSPI(14) >> 8) & 255;  
-    send_buf[2*i+3] =  motors[i].encoder.getPositionSPI(14) & 255;  
+//    send_buf[2*i2+] = (motors[i].encoder.getPositionSPI(14) >> 8) & 255;  
+//    send_buf[2*i+3] =  motors[i].encoder.getPositionSPI(14) & 255; 
+      send_buf[2+i] = move[i];
   }
   //delay(500);
-//  Serial1.write(send_buf, sizeof(send_buf));
+  Serial.println(send_buf[5]);
+  Serial1.write(send_buf, sizeof(send_buf));
 }
 
 
