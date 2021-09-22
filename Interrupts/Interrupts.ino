@@ -11,21 +11,21 @@
 */
 
 // step pins 
-int s0 = 0;
+int s0 = 26;
 int s1 = 0;
 int s2 = 26;
 int s3 = 0;
 int s4 = 0;
 int s5 = 0;
 // direction pins
-int d0 = 0;
+int d0 = 27;
 int d1 = 0;
 int d2 = 27;
 int d3 = 0;
 int d4 = 0;
 int d5 = 0;
 //chip select pins
-int c0 = 0;
+int c0 = 9;
 int c1 = 0;
 int c2 = 9;
 int c3 = 0;
@@ -44,7 +44,7 @@ int directionPin[6] = {d0,d1,d2,d3,d4,d5};
 volatile int move [6]; //volatile because changed in ISR
 volatile int state [6]; //volatile because changed in ISR
 
-int reversed[6] = {0, 1, 0, 1, 1, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
+int reversed[6] = {0, 1, 1, 1, 1, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
 
 //Storing encoder values
 volatile float encoderDiff[6];  // units of encoder steps
@@ -67,18 +67,18 @@ void setup()
   Serial1.flush();
 
 //  motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
-//  motors[1].encoder.setZeroSPI(c1);
-//  motors[2].encoder.setZeroSPI(c2);
+//  motors[1].encoder.setZeroSPI(c1);     // when J2 motor juts towards me
+//  motors[2].encoder.setZeroSPI(c2);     // zero is at the left
 //  motors[3].encoder.setZeroSPI(c3);
 //  motors[4].encoder.setZeroSPI(c4);
 //  motors[5].encoder.setZeroSPI(c5);
   for (int i=0; i<6; i++){ //for each motor
 
 //   targetAngle[i] = 20;   // used for testing, this will be an input from object detection
-//   targetAngle[0] = 290;
+   targetAngle[0] = 90;
 
-//   targetAngle[1] = 40;
-   targetAngle[3] = 45;
+//   targetAngle[1] = 90;
+//   targetAngle[2] = 90;
    
 //   targetAngle[1] = 100;
 //   targetAngle[2] = 90; 
@@ -98,9 +98,9 @@ void setup()
    
     move[i] = 0; //default is to move none
    
-//    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
+    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
 //    move[1] = 1; // enable j2
-    move[2] = 1; // enable j3 
+//    move[2] = 1; // enable j3 
 //    move[3] = 1; //enable j4
 //    move[4] = 1; //enable j5
 //    move[5] = 1; // enable j6
@@ -176,8 +176,8 @@ void loop()
      makeSerBuffers();
   }
  
-//Serial.println(motors[1].encoder.getPositionSPI(14)); 
-//Serial.println(motors[1].encoder.getPositionSPI(14));
+Serial.println(motors[0].encoder.getPositionSPI(14)); 
+//Serial.println(motors[2].encoder.getPositionSPI(14));
 }
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
