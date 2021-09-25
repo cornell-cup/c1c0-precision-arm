@@ -1,36 +1,34 @@
-
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
 
 #define MAX_ENCODER_VAL 16383
 
 /* PROBLEMS LIST
-
   1. DO NOT HAVE TWO MOTORS HAVE SAME DIRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
-
 */
 
 // step pins 
 int s0 = 26;
-int s1 = 0;
-int s2 = 26;
+int s1 = 35;
+int s2 = 0;
 int s3 = 0;
 int s4 = 0;
 int s5 = 0;
 // direction pins
 int d0 = 27;
-int d1 = 0;
-int d2 = 27;
+int d1 = 34;
+int d2 = 0;
 int d3 = 0;
 int d4 = 0;
 int d5 = 0;
 //chip select pins
-int c0 = 9;
-int c1 = 0;
-int c2 = 9;
+int c0 = 10;
+int c1 = 9;
+int c2 = 0;
 int c3 = 0;
 int c4 = 0;
 int c5 = 0;
+
 
 uint8_t send_buf[10];
 
@@ -77,8 +75,8 @@ void setup()
 //   targetAngle[i] = 20;   // used for testing, this will be an input from object detection
    targetAngle[0] = 90;
 
-//   targetAngle[1] = 90;
-//   targetAngle[2] = 90;
+   targetAngle[1] = 90;
+   targetAngle[2] = 90;
    
 //   targetAngle[1] = 100;
 //   targetAngle[2] = 90; 
