@@ -2,13 +2,15 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
 #include <SoftwareSerial.h>
+#include <R2Protocol.h>
+
 
 SoftwareSerial mySerial(19,18); // RX, TX
 
 #define MAX_ENCODER_VAL 16383
 
 int i = 0;
-
+// 16 bit checksum, result of decoding 
 /* PROBLEMS LIST
 
   1. DO NOT HAVE TWO MOTORS HAVE SAME DIRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
@@ -37,7 +39,7 @@ int c3 = 0;
 int c4 = 0;
 int c5 = 0;
 
-// uint8_t receive_buf[10];
+uint8_t receive_buf[10];
 
 // read port 8 or 10 using serial 
 
@@ -53,14 +55,27 @@ void setup() {
  
 
 }
-
+uint16_t checksum;
+char type;
+char data;
 void loop() {
   // put your main code here, to run repeatedly:
-  if (Serial1.available())
+  if (Serial1.available()) {
     //Serial.println('\n');
     Serial.write(Serial1.read());
+    r2p_decode(receive_buf, 6, checksum, type, data, 6);
+    Serial.write(data); 
+   
+   
   // flush the serial every 100 iterations 
-  if ((i % 10) == 0) 
-    Serial1.flush();
-  
+  //if ((i % 10) == 0) 
+    //Serial1.flush();
+
+   // decode the message from the Jetson using the R2 Protocol 
+   // buffer is what is received including checksum, start, and end message, and encoded target angles
+   // data is the output: it is extracted from the buffer 
+   // function header: inline int32_t r2p_decode(const uint8_t* buffer, uint32_t buffer_len, uint16_t* checksum, char type[5], uint8_t* data, uint32_t* data_len) {
+    
+  // data is 4 char, convert to target angles cast using toInt
+  }
 }
