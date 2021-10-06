@@ -5,7 +5,7 @@
 #include <R2Protocol.h>
 
 
-SoftwareSerial mySerial(19,18); // RX, TX
+//SoftwareSerial mySerial(19,18); // RX, TX
 
 #define MAX_ENCODER_VAL 16383
 
@@ -39,7 +39,7 @@ int c3 = 0;
 int c4 = 0;
 int c5 = 0;
 
-uint8_t receive_buf[10];
+int receive_buf[1];
 
 // read port 8 or 10 using serial 
 
@@ -47,35 +47,37 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600); // set Baud Rate
   Serial1.begin(9600); 
-  Serial1.flush();
+  //Serial1.flush();
   Serial.println("Hello World"); // Serial is what is print
   //mySerial.begin(9600);
   //mySerial.println("Bonjour"); 
-  Serial1.println("Bonjour"); 
+  //Serial1.println("Bonjour"); 
  
 
 }
 uint16_t checksum;
 char type;
-char data;
+char data[6];
 void loop() {
-  // put your main code here, to run repeatedly:
-  if (Serial1.available()) {
+    // put your main code here, to run repeatedly:
+    Serial1.flush();
+    //receive_buf = Serial1.read();
     //Serial.println('\n');
-    Serial.write(Serial1.read());
-    r2p_decode(receive_buf, 6, checksum, type, data, 6);
-    Serial.write(data); 
-   
-   
-  // flush the serial every 100 iterations 
-  //if ((i % 10) == 0) 
+     Serial.write(Serial1.read());
+    // Serial.write("\n");
+    //Serial.write(r2p_decode(receive_buf, 1, checksum, type, data, 1));
+    //Serial.write("Hello again");
+    //Serial.write(data); 
+    
+    // flush the serial every 10 iterations 
+    //if ((i % 10) == 0) 
     //Serial1.flush();
 
-   // decode the message from the Jetson using the R2 Protocol 
-   // buffer is what is received including checksum, start, and end message, and encoded target angles
-   // data is the output: it is extracted from the buffer 
-   // function header: inline int32_t r2p_decode(const uint8_t* buffer, uint32_t buffer_len, uint16_t* checksum, char type[5], uint8_t* data, uint32_t* data_len) {
+    // decode the message from the Jetson using the R2 Protocol 
+    // buffer is what is received including checksum, start, and end message, and encoded target angles
+    // data is the output: it is extracted from the buffer 
+    // function header: inline int32_t r2p_decode(const uint8_t* buffer, uint32_t buffer_len, uint16_t* checksum, char type[5], uint8_t* data, uint32_t* data_len) {
     
-  // data is 4 char, convert to target angles cast using toInt
-  }
+    // data is 4 char, convert to target angles cast using toInt
+ 
 }
