@@ -47,7 +47,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600); // set Baud Rate
   Serial1.begin(9600); 
-  //Serial1.flush();
+  Serial1.flush();
   Serial.println("Hello World"); // Serial is what is print
   //mySerial.begin(9600);
   //mySerial.println("Bonjour"); 
@@ -55,15 +55,17 @@ void setup() {
  
 
 }
-uint16_t checksum;
-char type;
-char data[6];
+//uint16_t checksum;
+//char type;
+//char data[6];
 void loop() {
     // put your main code here, to run repeatedly:
-    Serial1.flush();
+    // Serial1.flush();
     //receive_buf = Serial1.read();
     //Serial.println('\n');
-     Serial.write(Serial1.read());
+    if (Serial1.available() > 1) {
+      Serial.println(Serial1.read());
+    }
     // Serial.write("\n");
     //Serial.write(r2p_decode(receive_buf, 1, checksum, type, data, 1));
     //Serial.write("Hello again");
