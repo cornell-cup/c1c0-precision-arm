@@ -1,9 +1,7 @@
 // Jetson to Arduino Communication 
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
-#include <SoftwareSerial.h>
 #include <R2Protocol.h>
-
 
 //SoftwareSerial mySerial(19,18); // RX, TX
 
@@ -48,11 +46,7 @@ void setup() {
   Serial.begin(9600); // set Baud Rate
   Serial1.begin(9600); 
   Serial1.flush();
-  Serial.println("Hello World"); // Serial is what is print
-  //mySerial.begin(9600);
-  //mySerial.println("Bonjour"); 
-  //Serial1.println("Bonjour"); 
- 
+  Serial.println("Hello World");
 
 }
 //uint16_t checksum;
@@ -83,3 +77,15 @@ void loop() {
     // data is 4 char, convert to target angles cast using toInt
  
 }
+
+// expected output
+//255
+//254 end of start sequence
+//80
+//81
+//82
+//83
+//84
+//85
+//255
+//253 end of stop sequence 

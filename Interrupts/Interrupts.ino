@@ -1,5 +1,8 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
+#include <R2Protocol.h>
+
+// use interrupts file for jetson to arduino communicaiton
 
 #define MAX_ENCODER_VAL 16383
 
@@ -31,6 +34,7 @@ int c5 = 0;
 
 
 uint8_t send_buf[10];
+int receive_buf[1];
 
 volatile int counter = 0;
 volatile int fill_serial_buffer = false;
@@ -63,6 +67,7 @@ void setup()
   send_buf[9] = 253;
 
   Serial1.flush();
+  Serial.println("Hello World"); 
 
 //  motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
 //  motors[1].encoder.setZeroSPI(c1);     // when J2 motor juts towards me
@@ -73,7 +78,7 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
 
 //   targetAngle[i] = 20;   // used for testing, this will be an input from object detection
-   targetAngle[0] = 90;
+   targetAngle[0] = 90; // read serial input
 
    targetAngle[1] = 90;
    targetAngle[2] = 90;
@@ -173,9 +178,12 @@ void loop()
   if(fill_serial_buffer){
      makeSerBuffers();
   }
- 
-Serial.println(motors[0].encoder.getPositionSPI(14)); 
-//Serial.println(motors[2].encoder.getPositionSPI(14));
+  
+   if (Serial1.available() > 1) {
+      Serial.println(Serial1.read());
+    }
+  //Serial.println(motors[0].encoder.getPositionSPI(14)); 
+  //Serial.println(motors[2].encoder.getPositionSPI(14));
 }
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
