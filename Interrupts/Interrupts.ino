@@ -68,6 +68,7 @@ void setup()
 
   Serial1.flush();
   Serial.println("Hello World"); 
+  Serial.println(R2Protocol.decode(receiver_buf, 1, &checksum, type, data, 1));
 
 //  motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
 //  motors[1].encoder.setZeroSPI(c1);     // when J2 motor juts towards me

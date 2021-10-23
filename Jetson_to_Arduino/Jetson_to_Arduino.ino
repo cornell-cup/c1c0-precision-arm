@@ -37,7 +37,7 @@ int c3 = 0;
 int c4 = 0;
 int c5 = 0;
 
-int receive_buf[1];
+uint8_t receive_buf[256];
 
 // read port 8 or 10 using serial 
 
@@ -49,16 +49,26 @@ void setup() {
   Serial.println("Hello World");
 
 }
-//uint16_t checksum;
-//char type;
-//char data[6];
+uint16_t checksum;
+char type[4];
+uint8_t data[1]; // change if you want to send a char or an int, declare globally!
+uint32_t data_len = 1; 
 void loop() {
     // put your main code here, to run repeatedly:
     // Serial1.flush();
     //receive_buf = Serial1.read();
     //Serial.println('\n');
-    if (Serial1.available() > 1) {
-      Serial.println(Serial1.read());
+    if (Serial1.available() > 0) {
+      Serial1.readBytes(receive_buf, 256);
+      for (i=0;i<17; i++){
+        Serial.println(receive_buf[i]); // correctly prints the buffer
+      }
+      Serial.println(r2p_decode(receive_buf, 256, &checksum, type, data, &data_len));
+      Serial.println(data_len);
+      Serial.println("done decode"); // prints this line
+      for (i=0; i<1; i++){
+        Serial.println(data[i]); // doesn't print this line
+      }
     }
     // Serial.write("\n");
     //Serial.write(r2p_decode(receive_buf, 1, checksum, type, data, 1));

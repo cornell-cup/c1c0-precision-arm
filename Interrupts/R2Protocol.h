@@ -170,7 +170,7 @@ inline int32_t r2p_decode_nocs(const uint8_t* buffer, uint32_t buffer_len, uint1
   if (buffer[index + *data_len + 13] == 0xd2 && buffer[index + *data_len + 14] == 0xe2 && buffer[index + *data_len + 15] == 0xf2) {
     return index + *data_len + R2P_HEADER_SIZE;
   }
-  return -1;
+  return -2;
 }
 
 /**
@@ -188,7 +188,7 @@ inline int32_t r2p_decode(const uint8_t* buffer, uint32_t buffer_len, uint16_t* 
   // Decode without checking the checksum first
   uint32_t n = r2p_decode_nocs(buffer, buffer_len, checksum, type, data, data_len);
   if (n < 0) {
-    return -1;
+    return -3;
   }
 
   // A checksum of 0 signifies no checksum

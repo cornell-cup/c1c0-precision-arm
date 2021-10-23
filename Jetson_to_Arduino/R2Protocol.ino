@@ -146,12 +146,12 @@ inline int32_t r2p_decode_nocs(const uint8_t* buffer, uint32_t buffer_len, uint1
   while (index < buffer_len - 2 && !(buffer[index] == 0xa2 &&
       buffer[index + 1] == 0xb2 && buffer[index + 2] == 0xc2)) index++;
   if (index >= buffer_len - 2) { // Failed to find the starting sequence
-    return -1;
+    return -2;
   }
 
   // Make sure there is enough in the buffer for the header
   if (buffer_len - index < R2P_HEADER_SIZE) {
-    return -1;
+    return -3;
   }
 
   // Checksum
@@ -170,7 +170,7 @@ inline int32_t r2p_decode_nocs(const uint8_t* buffer, uint32_t buffer_len, uint1
   if (buffer[index + *data_len + 13] == 0xd2 && buffer[index + *data_len + 14] == 0xe2 && buffer[index + *data_len + 15] == 0xf2) {
     return index + *data_len + R2P_HEADER_SIZE;
   }
-  return -1;
+  return -4;
 }
 
 /**
@@ -189,12 +189,12 @@ inline int32_t r2p_decode(const uint8_t* buffer, uint32_t buffer_len, uint16_t* 
   
   uint32_t n = r2p_decode_nocs(buffer, buffer_len, checksum, type?, data, data_len);
   if (n < 0) {
-    return -1;
+    return -5;
   }
 
   // A checksum of 0 signifies no checksum
   if (*checksum == 0) {
-    return n;
+    return -7;
   }
 
   // Compute the checksum and compare
