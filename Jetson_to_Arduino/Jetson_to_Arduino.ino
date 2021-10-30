@@ -51,51 +51,17 @@ void setup() {
 }
 uint16_t checksum;
 char type[4];
-uint8_t data[1]; // change if you want to send a char or an int, declare globally!
-uint32_t data_len = 1; 
+uint8_t data[6]; // change if you want to send a char or an int, declare globally!
+uint32_t data_len = 6; 
 void loop() {
-    // put your main code here, to run repeatedly:
     // Serial1.flush();
-    //receive_buf = Serial1.read();
-    //Serial.println('\n');
     if (Serial1.available() > 0) {
       Serial1.readBytes(receive_buf, 256);
-      for (i=0;i<17; i++){
-        Serial.println(receive_buf[i]); // correctly prints the buffer
-      }
       Serial.println(r2p_decode(receive_buf, 256, &checksum, type, data, &data_len));
       Serial.println(data_len);
       Serial.println("done decode"); // prints this line
-      for (i=0; i<1; i++){
+      for (i=0; i<6; i++){
         Serial.println(data[i]); // doesn't print this line
       }
-    }
-    // Serial.write("\n");
-    //Serial.write(r2p_decode(receive_buf, 1, checksum, type, data, 1));
-    //Serial.write("Hello again");
-    //Serial.write(data); 
-    
-    // flush the serial every 10 iterations 
-    //if ((i % 10) == 0) 
-    //Serial1.flush();
-
-    // decode the message from the Jetson using the R2 Protocol 
-    // buffer is what is received including checksum, start, and end message, and encoded target angles
-    // data is the output: it is extracted from the buffer 
-    // function header: inline int32_t r2p_decode(const uint8_t* buffer, uint32_t buffer_len, uint16_t* checksum, char type[5], uint8_t* data, uint32_t* data_len) {
-    
-    // data is 4 char, convert to target angles cast using toInt
- 
+    } 
 }
-
-// expected output
-//255
-//254 end of start sequence
-//80
-//81
-//82
-//83
-//84
-//85
-//255
-//253 end of stop sequence 
