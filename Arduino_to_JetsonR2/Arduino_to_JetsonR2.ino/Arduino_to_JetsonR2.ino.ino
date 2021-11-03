@@ -20,7 +20,7 @@ void send(const uint8_t* data, uint32_t data_len) {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  send(mystr, 5);
+  send(mystr, 6);
   delay(1000); 
 
 }
