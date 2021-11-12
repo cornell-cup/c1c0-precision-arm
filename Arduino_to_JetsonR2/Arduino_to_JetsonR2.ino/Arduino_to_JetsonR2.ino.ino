@@ -2,6 +2,7 @@
 char mystr[5] = {'A', 'B', 'C', 'D', 'E'};
 char list[] = "parm"; // parm for precise arm
 
+// 2 writes and then send
 
 void setup() {
   // put your setup code here, to run once:

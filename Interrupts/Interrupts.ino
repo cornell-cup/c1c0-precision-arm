@@ -32,9 +32,18 @@ int c3 = 0;
 int c4 = 0;
 int c5 = 0;
 
+//SoftwareSerial mySerial(19,18); // RX, TX
 
 uint8_t send_buf[10];
-int receive_buf[1];
+int i = 0; 
+
+// Jetson to Arduino Set up
+uint16_t checksum;
+char type[4];
+uint8_t data[6]; // change if you want to send a char or an int, declare globally!
+uint32_t data_len = 6; 
+
+uint8_t receive_buf[256];
 
 volatile int counter = 0;
 volatile int fill_serial_buffer = false;
@@ -60,16 +69,17 @@ void setup()
 {
   Serial.begin(9600); //Baud Rate
   Serial1.begin(9600); 
-
-  send_buf[0] = 255;
-  send_buf[1] = 254;
-  send_buf[8] = 255;
-  send_buf[9] = 253;
-
   Serial1.flush();
-  Serial.println("Hello World"); 
-  Serial.println(R2Protocol.decode(receiver_buf, 1, &checksum, type, data, 1));
+  Serial.println("Hello World");
+  
 
+  //send_buf[0] = 255;
+  //send_buf[1] = 254;
+  //send_buf[8] = 255;
+  //send_buf[9] = 253;
+
+  
+// Only uncomment when you want to zero the encoders
 //  motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
 //  motors[1].encoder.setZeroSPI(c1);     // when J2 motor juts towards me
 //  motors[2].encoder.setZeroSPI(c2);     // zero is at the left
@@ -79,10 +89,10 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
 
 //   targetAngle[i] = 20;   // used for testing, this will be an input from object detection
-   targetAngle[0] = 90; // read serial input
+ //  targetAngle[0] = 90; // read serial input
 
-   targetAngle[1] = 90;
-   targetAngle[2] = 90;
+    targetAngle[1] = 80;
+   //targetAngle[2] = 200;
    
 //   targetAngle[1] = 100;
 //   targetAngle[2] = 90; 
@@ -102,8 +112,8 @@ void setup()
    
     move[i] = 0; //default is to move none
    
-    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-//    move[1] = 1; // enable j2
+//    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
+    move[1] = 1; // enable j2
 //    move[2] = 1; // enable j3 
 //    move[3] = 1; //enable j4
 //    move[4] = 1; //enable j5
@@ -176,15 +186,33 @@ void loop()
      checkDirLongWay(i); 
   }
 
-  if(fill_serial_buffer){
-     makeSerBuffers();
-  }
+  //if(fill_serial_buffer){
+    // makeSerBuffers();
+  //}
   
-   if (Serial1.available() > 1) {
-      Serial.println(Serial1.read());
-    }
+   //if (Serial1.available() > 1) {
+     // Serial.println(Serial1.read());
+    //}
   //Serial.println(motors[0].encoder.getPositionSPI(14)); 
-  //Serial.println(motors[2].encoder.getPositionSPI(14));
+ // Serial.println(motors[1].encoder.getPositionSPI(14));
+
+  // Jetson to Arduino
+   if (Serial1.available() > 0) {
+      Serial1.readBytes(receive_buf, 256);
+      Serial.println(r2p_decode(receive_buf, 256, &checksum, type, data, &data_len));
+      Serial.println(data_len);
+      Serial.println("done decode"); // prints this line
+      for (i=0; i<6; i++){
+        Serial.println(data[i]); // doesn't print this line
+      }
+    } 
+    changeAngles(data);
+}
+
+void changeAngles(uint8_t data[]){
+  for (i=0; i<6; i++){
+    targetAngle[i] = data[i];
+   }
 }
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
@@ -206,19 +234,19 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
   
 }
 
-void makeSerBuffers(){
+//void makeSerBuffers(){
   
-  fill_serial_buffer = false;
-  for (int i=0; i<6; i++) {
+  //fill_serial_buffer = false;
+  //for (int i=0; i<6; i++) {
 //    send_buf[2*i2+] = (motors[i].encoder.getPositionSPI(14) >> 8) & 255;  
 //    send_buf[2*i+3] =  motors[i].encoder.getPositionSPI(14) & 255; 
-      send_buf[2+i] = move[i];
-  }
+     // send_buf[2+i] = move[i];
+//  }
   //delay(500);
   //Serial.println(send_buf[5]);
-  Serial1.flush();
-  Serial1.write(send_buf, sizeof(send_buf));
-}
+  //Serial1.flush();
+  //Serial1.write(send_buf, sizeof(send_buf));
+//}
 
 
 
