@@ -91,7 +91,7 @@ void setup()
 //   targetAngle[i] = 20;   // used for testing, this will be an input from object detection
  //  targetAngle[0] = 90; // read serial input
 
-    targetAngle[1] = 80;
+//    targetAngle[1] = 80;
    //targetAngle[2] = 200;
    
 //   targetAngle[1] = 100;
@@ -113,7 +113,7 @@ void setup()
     move[i] = 0; //default is to move none
    
 //    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-    move[1] = 1; // enable j2
+//    move[1] = 1; // enable j2
 //    move[2] = 1; // enable j3 
 //    move[3] = 1; //enable j4
 //    move[4] = 1; //enable j5
@@ -138,7 +138,7 @@ void setup()
 ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 {
   TCNT1 = 65518;            // preload timer to 300 us
-  fill_serial_buffer = true;
+  fill_serial_buffer = true; //check
   
   for (int i=0; i<6; i++){
 
@@ -151,6 +151,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
         digitalWrite(stepPin[i], state[i]); //write to step pin
       }
       else {
+//        Serial.println("turn off");
         move[i] = 0; //stop moving motor if location reached
       }
     }
@@ -185,6 +186,8 @@ void loop()
   for (int i=0; i<6; i++){
      checkDirLongWay(i); 
   }
+//  Serial.println(move[1]);
+//  Serial.println(move[1]);
 
   //if(fill_serial_buffer){
     // makeSerBuffers();
@@ -193,31 +196,47 @@ void loop()
    //if (Serial1.available() > 1) {
      // Serial.println(Serial1.read());
     //}
-  //Serial.println(motors[0].encoder.getPositionSPI(14)); 
- // Serial.println(motors[1].encoder.getPositionSPI(14));
+//  Serial.println(motors[0].encoder.getPositionSPI(14)); 
+//  Serial.println(motors[1].encoder.getPositionSPI(14));
+//  Serial.println(motors[2].encoder.getPositionSPI(14));
+//  Serial.println(motors[3].encoder.getPositionSPI(14));
+//  Serial.println(motors[4].encoder.getPositionSPI(14));
+//  Serial.println(motors[5].encoder.getPositionSPI(14));
 
   // Jetson to Arduino
    if (Serial1.available() > 0) {
       Serial1.readBytes(receive_buf, 256);
-      Serial.println(r2p_decode(receive_buf, 256, &checksum, type, data, &data_len));
-      Serial.println(data_len);
-      Serial.println("done decode"); // prints this line
+//      Serial.println(r2p_decode(receive_buf, 256, &checksum, type, data, &data_len));
+      r2p_decode(receive_buf, 256, &checksum, type, data, &data_len);
+//      Serial.println(data_len);
+//      Serial.println("done decode"); 
       for (i=0; i<6; i++){
-        Serial.println(data[i]); // doesn't print this line
+//        Serial.println(data[i]); 
       }
+//      Serial.println(data[1]);
+      changeAngles(data);
     } 
-    changeAngles(data);
 }
 
 void changeAngles(uint8_t data[]){
   for (i=0; i<6; i++){
-    targetAngle[i] = data[i];
+    if (targetAngle[i] != data[i]){
+      targetAngle[i] = data[i];
+      encoderTarget[i] = targetAngle[i] * 45.51111;
+      encoderPos[i] = motors[i].encoder.getPositionSPI(14);
+      encoderDiff[i] = encoderTarget[i] - encoderPos[i];
+      move[i] = 1;
+    }
    }
 }
+
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
 
   encoderPos[motorNum] = motors[motorNum].encoder.getPositionSPI(14);
+  if (encoderPos[motorNum] == 65535){
+    move[motorNum] = 0; //stop moving if encoder reads error message
+  }
   
   if ((MAX_ENCODER_VAL - 1000) < encoderPos[motorNum]) {  // if motor goes past zero incorrectly, we want to make sure it moves back in the correct direction
     encoderPos[motorNum] = 0;
