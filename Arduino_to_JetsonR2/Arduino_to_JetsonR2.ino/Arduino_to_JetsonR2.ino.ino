@@ -1,5 +1,7 @@
 #include "R2Protocol.h"
-char mystr[5] = {'A', 'B', 'C', 'D', 'E'};
+uint8_t encoderAngles[] = {10, 20, 30, 40, 50, 60};
+// expects: dinsxy
+char mystr[6] = {'A', 'B', 'C', 'D', 'E', 'F'};
 char list[] = "parm"; // parm for precise arm
 
 // 2 writes and then send
@@ -21,7 +23,14 @@ void send(const uint8_t* data, uint32_t data_len) {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  send(mystr, 6);
+  //convertBytetoChar(); 
+  //send(mystr, 6);
+  send(encoderAngles, 6);
   delay(1000); 
+}
 
+void convertBytetoChar(){
+  for (int i=0; i<6; i++){
+    mystr[i] = encoderAngles[i]; 
+  }
 }
