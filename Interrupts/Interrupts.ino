@@ -181,16 +181,17 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
 }
 // Arduino to Jetson R2
+uint8_t encoder_angles[] = {10, 20, 30, 40, 50, 60};
+char list[] = "parm"; // parm for precise arm
 char send_buffer[256];
-char mystr[5] = {'A', 'B', 'C', 'D', 'E'};
 int k;
 
-void update_mystr(){
+void update_encoder_angles(){
   for (k =0; k <6; k++){
-    mystr[k] = motors[k].encoder.getPositionSPI(14)/ 45.1111;  // how to convert to char and how many digits to round to
+    encoder_angles[k] = (int) motors[k].encoder.getPositionSPI(14)/ 45.1111;  // how to convert to char and how many digits to round to
   }
 }
-char list[] = "parm"; // parm for precise arm
+
 void send(const uint8_t* data, uint32_t data_len) {
   uint32_t written = r2p_encode(list, data, data_len, send_buffer, 256);
   Serial.println(written);
@@ -234,8 +235,9 @@ void loop()
 //      Serial.println(data[1]);
       changeAngles(data);
     } 
-  update_mystr(); 
-  send(mystr, 6);
+  // Arduino to Jetson 
+  update_encoder_angles(); 
+  send(encoder_angles, 6);
 }
 
 void changeAngles(uint8_t data[]){
