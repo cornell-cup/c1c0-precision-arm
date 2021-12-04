@@ -39,7 +39,7 @@ int i = 0;
 
 // Jetson to Arduino Set up
 uint16_t checksum;
-char type[4];
+char type[5];
 uint8_t data[6]; // change if you want to send a char or an int, declare globally!
 uint32_t data_len = 6; 
 
@@ -68,10 +68,11 @@ volatile int nottolerant; // motor not within expected position
 void setup()
 {
   Serial.begin(9600); //Baud Rate
-  Serial1.begin(9600); 
-  Serial1.flush();
-  Serial.println("Hello World");
+  Serial1.begin(38400); 
+  //Serial1.flush();
   
+  Serial.println("Hello World");
+  delay(1000);
 
   //send_buf[0] = 255;
   //send_buf[1] = 254;
@@ -181,23 +182,24 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
 }
 // Arduino to Jetson R2
-uint8_t encoder_angles[] = {10, 20, 30, 40, 50, 60};
-char list[] = "parm"; // parm for precise arm
-char send_buffer[256];
+uint16_t encoder_angles[] = {10, 20, 30, 40, 50, 60};
+uint8_t encoder_anglesB8[12]; 
+uint8_t send_buffer[256];
 int k;
 
 void update_encoder_angles(){
   for (k =0; k <6; k++){
-    encoder_angles[k] = (int) motors[k].encoder.getPositionSPI(14)/ 45.1111;  // how to convert to char and how many digits to round to
+    encoder_angles[k] = (uint16_t) motors[k].encoder.getPositionSPI(14)/ 45.1111;  // how to convert to char and how many digits to round to
   }
 }
 
-void send(const uint8_t* data, uint32_t data_len) {
-  uint32_t written = r2p_encode(list, data, data_len, send_buffer, 256);
-  Serial.println(written);
-  for(int i=0; i <written; i++){
-    Serial1.write(send_buffer[i]);
-  }
+void send(char type[5], const uint8_t* data, uint32_t data_len, uint8_t* send_buffer) {
+  uint32_t written = r2p_encode(type, data, data_len, send_buffer, 256);
+  Serial1.write(send_buffer, written);
+  Serial.println("Bytes written: " + String(written));
+//  for(int i=0; i <written; i++){
+//    Serial.write(send_buffer[i]);
+//  }
 }
 
 void loop()
@@ -222,6 +224,8 @@ void loop()
 //  Serial.println(motors[4].encoder.getPositionSPI(14));
 //  Serial.println(motors[5].encoder.getPositionSPI(14));
 
+
+  
   // Jetson to Arduino
    if (Serial1.available() > 0) {
       Serial1.readBytes(receive_buf, 256);
@@ -234,10 +238,18 @@ void loop()
       }
 //      Serial.println(data[1]);
       changeAngles(data);
+      
     } 
-  // Arduino to Jetson 
-  update_encoder_angles(); 
-  send(encoder_angles, 6);
+    // maybe put this into an else: watch for read and write 
+  else{
+  update_encoder_angles();
+  convert_b16_to_b8(encoder_angles, encoder_anglesB8, 12);
+  Serial.println("Here");
+  send("prm", encoder_anglesB8, 12, send_buffer);
+  }
+//  // Arduino to Jetson 
+
+  
 }
 
 void changeAngles(uint8_t data[]){
@@ -273,6 +285,28 @@ void checkDirLongWay(int motorNum){ //checks that motor is moving in right direc
       digitalWrite(directionPin[motorNum], reversed[motorNum]);
   }
   
+}
+
+void convert_b8_to_b16(uint8_t *databuffer, uint16_t *data) {
+  int data_idx;
+  for (int i=0; i < 16; i++) {
+    data_idx = i / 2;
+    if ( (i & 1) == 0) {
+      // even
+      data[data_idx] = databuffer[i] << 8;
+    } else {
+      // odd
+      data[data_idx] |= databuffer[i];
+    }
+  }
+}
+void convert_b16_to_b8(int *databuffer, uint8_t *data, int len) {
+  int data_idx1;
+  int data_idx2;
+  for (int i = 0; i < 2*len; i+=2) {
+    data[i] = (databuffer[i/2] >> 8) & 255;
+    data[i+1] = (databuffer[i/2]) & 255;
+  }
 }
 
 //void makeSerBuffers(){
