@@ -10,7 +10,7 @@
   1. DO NOT HAVE TWO MOTORS HAVE SAME DIRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
 */
 
-// step pins 
+// step pins 2
 int s0 = 26;
 int s1 = 35;
 int s2 = 0;
@@ -94,8 +94,8 @@ void setup()
 //  motors[4].encoder.setZeroSPI(c4);
 //  motors[5].encoder.setZeroSPI(c5);
   for (int i=0; i<6; i++){ //for each motor
-
-//   targetAngle[i] = 20;   // used for testing, this will be an input from object detection
+  // initialized to something that isn't valid
+   targetAngle[i] = -1;   // used for testing, this will be an input from object detection
  //  targetAngle[0] = 90; // read serial input
 
 //    targetAngle[1] = 80;
@@ -234,7 +234,7 @@ void loop()
   
   // Jetson to Arduino
   
-   if (Serial1.available() > 0) {
+   if (Serial1.available() > 22) {
       Serial.println("Bytes available: " + String(Serial1.available()));
       Serial1.readBytes(receive_buf, 256);
       for (i=0; i<22; i++) {
@@ -248,7 +248,7 @@ void loop()
       Serial.println("done decode"); 
 
       Serial.println("Data");
-      for (i=0; i<6; i++){
+      for (i=0; i<data_len; i++){
         Serial.println(data[i]); 
       }
      //Serial.println(data[1]);
@@ -269,7 +269,7 @@ void changeAngles(uint8_t data[]){
   for (i=0; i<6; i++){
     if (targetAngle[i] != data[i]){
       targetAngle[i] = data[i];
-      encoderTarget[i] = targetAngle[i] * 45.51111;
+      encoderTarget[i] = targetAngle[i] * 45.51111 * 360/255;
       encoderPos[i] = motors[i].encoder.getPositionSPI(14);
       encoderDiff[i] = encoderTarget[i] - encoderPos[i];
       move[i] = 1;
