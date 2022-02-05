@@ -41,7 +41,7 @@ int i = 0;
 uint16_t checksum;
 char type[5];
 uint8_t data[6]; 
-uint32_t data_len = 6; 
+uint32_t data_len = 13; // should be 6
 
 uint8_t receive_buf[256];
 
@@ -72,11 +72,11 @@ void reset_input_buffer() {
 
 void setup()
 {
-  Serial.begin(9600); //Baud Rate
-  Serial1.begin(9600); 
+  Serial.begin(115200); //Baud Rate
+  Serial1.begin(115200); 
   
   
-  Serial.println("Hello World");
+  //Serial.println("Hello World");
   delay(1000);
   reset_input_buffer();
 
@@ -234,7 +234,7 @@ void loop()
   
   // Jetson to Arduino
   
-   if (Serial1.available() > 22) {
+   if (Serial1.available() > 0) {
       Serial.println("Bytes available: " + String(Serial1.available()));
       Serial1.readBytes(receive_buf, 256);
       for (i=0; i<22; i++) {
@@ -251,16 +251,16 @@ void loop()
       for (i=0; i<data_len; i++){
         Serial.println(data[i]); 
       }
-     //Serial.println(data[1]);
-     changeAngles(data);
+      //Serial.println(data[1]);
+      changeAngles(data);
     } 
  
   // Arduino to Jetson   
- // else{
-   // update_encoder_angles();
-    //convert_b16_to_b8(encoder_angles, encoder_anglesB8, 12);
-    //send("prm", encoder_anglesB8, 12, send_buffer);
- // }
+  else{
+    update_encoder_angles();
+    convert_b16_to_b8(encoder_angles, encoder_anglesB8, 12);
+    send("prm", encoder_anglesB8, 12, send_buffer);
+    }
 //  
   
 }
