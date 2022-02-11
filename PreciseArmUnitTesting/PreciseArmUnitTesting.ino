@@ -7,6 +7,9 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
+  // if move[i] = 1, assert that targetAngle[i] != current angles
+  // tuple with 2 values current and future position, calculate difference to be the right direction 
+
 }
 
 // To do:
