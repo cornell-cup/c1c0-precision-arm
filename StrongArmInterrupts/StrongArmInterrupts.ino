@@ -3,6 +3,7 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
 #include <R2Protocol.h>
+#include <Servo.h>
 
 // use interrupts file for jetson to arduino communicaiton
 // ISR: Interrupt Service Routine
