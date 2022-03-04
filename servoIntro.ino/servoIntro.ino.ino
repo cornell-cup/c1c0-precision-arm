@@ -14,32 +14,22 @@ void setup() {
   Serial.begin(9600);
   myservo.attach(9);  // attaches the servo on pin 9 to the servo object
   Serial.println(myservo.attached()); 
-
   myservo.writeMicroseconds(1500);
 
- // myservo.write(100);
- // delay(2000);
- // myservo.write(90);
- // delay(2000);
- // TODO: how to get the arm to move to calculate specific angles to go to
+ // TODO: how to get the arm to move to calculate specific angles to go tos
  // minor issue: repeating the same angles moves the servo more and more in one direction over time
+ // may need to add 'high precision resistors in order to rectify imprecise movements
   myservo.write(90);
-
 }
 
 void loop() {
   // for continuous servo, write(n) sets the speed
-//  myservo.write(120);
-//  delay(500);
-//  myservo.write(90);
-//  delay(2000);
-//  myservo.write(60);
-//  delay(500); 
-//  myservo.write(90);
-//
-//  myservo.write(60);
-//  delay(500);
-//  myservo.write(120);
-//  delay(500);
-//  myservo.write(90);
+  myservo.write(150);
+  delay(200);
+  myservo.write(90);
+  delay(2000);
+  myservo.write(50);
+  delay(200); 
+  myservo.write(90);
+  delay(2000);
 }
