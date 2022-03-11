@@ -12,25 +12,25 @@
 
 // step pins 2
 int s0 = 26;
-int s1 = 35;
+int s1 = 0;
 int s2 = 0;
 int s3 = 0;
 int s4 = 0;
-int s5 = 0;
+int s5 = 35;
 // direction pins
 int d0 = 27;
-int d1 = 34;
+int d1 = 0;
 int d2 = 0;
 int d3 = 0;
 int d4 = 0;
-int d5 = 0;
+int d5 = 34;
 //chip select pins
-int c0 = 10;
-int c1 = 9;
+int c0 = 0;
+int c1 = 0;
 int c2 = 0;
 int c3 = 0;
 int c4 = 0;
-int c5 = 0;
+int c5 = 9;
 
 //SoftwareSerial mySerial(19,18); // RX, TX
 
