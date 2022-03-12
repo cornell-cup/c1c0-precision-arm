@@ -7,7 +7,7 @@
 #define MAX_ENCODER_VAL 16383
 
 /* PROBLEMS LIST
-  1. DO NOT HAVE TWO MOTORS HAVE SAME DIRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
+  1. DO NOT HAVE TWO MOTORS HAVE SAME DIkkmRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
 */
 
 // step pins 2
@@ -44,7 +44,7 @@ int directionPin[6] = {d0,d1,d2,d3,d4,d5};
 volatile int move [6]; //volatile because changed in ISR
 volatile int state [6]; //volatile because changed in ISR
 
-int reversed[6] = {0, 1, 1, 1, 1, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
+int reversed[6] = {0, 0, 1, 1, 1, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
 
 //Storing encoder values
 volatile float encoderDiff[6];  // units of encoder steps
@@ -76,7 +76,7 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
   // initialized to something that isn't valid
    targetAngle[i] = -1;   // used for testing, this will be an input from object detection
-   targetAngle[6] = 70; // read serial input
+   targetAngle[5] = 50; // read serial input
 
 //    targetAngle[1] = 80;
    //targetAngle[2] = 200;
@@ -101,10 +101,10 @@ void setup()
    
 //    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
 //    move[1] = 1; // enable j2
-//    move[2] = 1; // enable j3 
+//    move[1] = 1; // enable j3 
 //    move[3] = 1; //enable j4
 //    move[4] = 1; //enable j5
-//    move[5] = 1; // enable j6
+    move[5] = 1; // enable j6
    
     encoderTarget[i] = targetAngle[i] * 45.51111; //map degree to encoder steps
     encoderPos[i] = motors[i].encoder.getPositionSPI(14); //get starting encoder position
@@ -147,6 +147,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
 void loop()
 {
+  Serial.println(motors[5].encoder.getPositionSPI(14));
   for (int i=0; i<6; i++){
      checkDirLongWay(i); 
   }
