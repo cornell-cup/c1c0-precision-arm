@@ -12,25 +12,25 @@
 
 // step pins 2
 int s0 = 26;
-int s1 = 0;
+int s1 = 35;
 int s2 = 0;
 int s3 = 0;
 int s4 = 0;
-int s5 = 35;
+int s5 = 0;
 // direction pins
 int d0 = 27;
-int d1 = 0;
+int d1 = 34;
 int d2 = 0;
 int d3 = 0;
 int d4 = 0;
-int d5 = 34;
+int d5 = 0;
 //chip select pins
-int c0 = 0;
-int c1 = 0;
+int c0 = 10;
+int c1 = 9;
 int c2 = 0;
 int c3 = 0;
 int c4 = 0;
-int c5 = 9;
+int c5 = 0;
 
 //SoftwareSerial mySerial(19,18); // RX, TX
 
@@ -41,7 +41,7 @@ int i = 0;
 uint16_t checksum;
 char type[5];
 uint8_t data[6]; 
-uint32_t data_len = 13; // should be 6
+uint32_t data_len = 6; 
 
 uint8_t receive_buf[256];
 
@@ -55,7 +55,7 @@ int directionPin[6] = {d0,d1,d2,d3,d4,d5};
 volatile int move [6]; //volatile because changed in ISR
 volatile int state [6]; //volatile because changed in ISR
 
-int reversed[6] = {0, 0, 1, 1, 1, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
+int reversed[6] = {0, 1, 1, 1, 1, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
 
 //Storing encoder values
 volatile float encoderDiff[6];  // units of encoder steps
@@ -72,13 +72,15 @@ void reset_input_buffer() {
 
 void setup()
 {
-  Serial.begin(115200); //Baud Rate
-  Serial1.begin(115200); 
-  
-  
-  //Serial.println("Hello World");
+  Serial.begin(9600); //Baud Rate
+  Serial1.begin(9600); 
+
+  Serial.println("Hello World");
   delay(1000);
   reset_input_buffer();
+  for (i=0; i <256; i++){
+    Serial.println(receive_buf[i]);
+  }
 
   //send_buf[0] = 255;
   //send_buf[1] = 254;
@@ -118,14 +120,6 @@ void setup()
 
    
     move[i] = 0; //default is to move none
-   
-//    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-//    move[1] = 1; // enable j2
-//    move[2] = 1; // enable j3 
-//    move[3] = 1; //enable j4
-//    move[4] = 1; //enable j5
-//    move[5] = 1; // enable j6
-   
     encoderTarget[i] = targetAngle[i] * 45.51111; //map degree to encoder steps
     encoderPos[i] = motors[i].encoder.getPositionSPI(14); //get starting encoder position
     encoderDiff[i] = encoderTarget[i] - encoderPos[i]; //calculate difference between target and current
@@ -234,7 +228,7 @@ void loop()
   
   // Jetson to Arduino
   
-   if (Serial1.available() > 0) {
+   if (Serial1.available() > 22) {
       Serial.println("Bytes available: " + String(Serial1.available()));
       Serial1.readBytes(receive_buf, 256);
       for (i=0; i<22; i++) {
@@ -251,16 +245,16 @@ void loop()
       for (i=0; i<data_len; i++){
         Serial.println(data[i]); 
       }
-      //Serial.println(data[1]);
-      changeAngles(data);
+     //Serial.println(data[1]);
+     changeAngles(data);
     } 
  
   // Arduino to Jetson   
-  else{
-    update_encoder_angles();
-    convert_b16_to_b8(encoder_angles, encoder_anglesB8, 12);
-    send("prm", encoder_anglesB8, 12, send_buffer);
-    }
+// else{
+  //  update_encoder_angles();
+  //  convert_b16_to_b8(encoder_angles, encoder_anglesB8, 12);
+  //  send("prm", encoder_anglesB8, 12, send_buffer);
+ // }
 //  
   
 }

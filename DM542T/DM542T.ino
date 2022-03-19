@@ -1,6 +1,6 @@
 int stepPin = 5;
-int dirPin = 6;
-int enblPin = 7;
+int dirPin = 34;
+int enblPin =7;
 int Distance = 0;
 int STATE = 0;
 

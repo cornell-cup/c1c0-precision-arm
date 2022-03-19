@@ -12,25 +12,25 @@
 
 // step pins 2
 int s0 = 26;
-int s1 = 0;
+int s1 = 35;
 int s2 = 0;
 int s3 = 0;
 int s4 = 0;
-int s5 = 35;
+int s5 = 0;
 // direction pins
 int d0 = 27;
-int d1 = 0;
+int d1 = 34;
 int d2 = 0;
 int d3 = 0;
 int d4 = 0;
-int d5 = 34;
+int d5 = 0;
 //chip select pins
 int c0 = 0;
-int c1 = 0;
+int c1 = 9;
 int c2 = 0;
 int c3 = 0;
 int c4 = 0;
-int c5 = 9;
+int c5 = 0;
 
 
 int i = 0; 
@@ -44,7 +44,7 @@ int directionPin[6] = {d0,d1,d2,d3,d4,d5};
 volatile int move [6]; //volatile because changed in ISR
 volatile int state [6]; //volatile because changed in ISR
 
-int reversed[6] = {0, 0, 1, 1, 1, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
+int reversed[6] = {0, 0, 1, 1, 0, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
 
 //Storing encoder values
 volatile float encoderDiff[6];  // units of encoder steps
@@ -76,7 +76,7 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
   // initialized to something that isn't valid
    targetAngle[i] = -1;   // used for testing, this will be an input from object detection
-   targetAngle[5] = 50; // read serial input
+   targetAngle[1] = 100; // read serial input
 
 //    targetAngle[1] = 80;
    //targetAngle[2] = 200;
@@ -100,11 +100,11 @@ void setup()
     move[i] = 0; //default is to move none
    
 //    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-//    move[1] = 1; // enable j2
+    move[1] = 1; // enable j2
 //    move[1] = 1; // enable j3 
 //    move[3] = 1; //enable j4
 //    move[4] = 1; //enable j5
-    move[5] = 1; // enable j6
+//    move[5] = 1; // enable j6
    
     encoderTarget[i] = targetAngle[i] * 45.51111; //map degree to encoder steps
     encoderPos[i] = motors[i].encoder.getPositionSPI(14); //get starting encoder position
@@ -147,7 +147,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
 void loop()
 {
-  Serial.println(motors[5].encoder.getPositionSPI(14));
+  Serial.println(motors[1].encoder.getPositionSPI(14));
   for (int i=0; i<6; i++){
      checkDirLongWay(i); 
   }
