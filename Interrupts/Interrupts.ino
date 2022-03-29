@@ -78,9 +78,9 @@ void setup()
   Serial.println("Hello World");
   delay(1000);
   reset_input_buffer();
-  for (i=0; i <256; i++){
-    Serial.println(receive_buf[i]);
-  }
+ // for (i=0; i <256; i++){
+   // Serial.println(receive_buf[i]);
+  //}
 
   //send_buf[0] = 255;
   //send_buf[1] = 254;
@@ -190,13 +190,18 @@ int k;
 void update_encoder_angles(){
   for (k =0; k <6; k++){
     encoder_angles[k] = (uint16_t) motors[k].encoder.getPositionSPI(14)/ 45.1111;  // how to convert to char and how many digits to round to
+    // if you get the error message (aka encoder isn't connected), set to zero
+    if(encoder_angles[k] == 1452){
+      encoder_angles[k] = 0;
+    }
   }
 }
+
 
 void send(char type[5], const uint8_t* data, uint32_t data_len, uint8_t* send_buffer) {
   uint32_t written = r2p_encode(type, data, data_len, send_buffer, 256);
   Serial1.write(send_buffer, written);
- // Serial.println("Bytes written: " + String(written));
+  Serial.println("Bytes written: " + String(written));
 //  for(int i=0; i <written; i++){
 //    Serial.write(send_buffer[i]);
 //  }
@@ -228,34 +233,35 @@ void loop()
   
   // Jetson to Arduino
   
-   if (Serial1.available() > 22) {
-      Serial.println("Bytes available: " + String(Serial1.available()));
-      Serial1.readBytes(receive_buf, 256);
-      for (i=0; i<22; i++) {
-        Serial.println(receive_buf[i]);
-      }
-      //Serial.println(r2p_decode(receive_buf, 256, &checksum, type, data, &data_len));
-      r2p_decode(receive_buf, 256, &checksum, type, data, &data_len);
-      Serial.println(String(type));
-      Serial.println("Checksum: " + String(checksum));
-      Serial.println(data_len);
-      Serial.println("done decode"); 
-
-      Serial.println("Data");
-      for (i=0; i<data_len; i++){
-        Serial.println(data[i]); 
-      }
-     //Serial.println(data[1]);
-     changeAngles(data);
-    } 
+//   if (Serial1.available() > 22) {
+//      Serial.println("Bytes available: " + String(Serial1.available()));
+//      Serial1.readBytes(receive_buf, 256);
+//      for (i=0; i<22; i++) {
+//        Serial.println(receive_buf[i]);
+//      }
+//      //Serial.println(r2p_decode(receive_buf, 256, &checksum, type, data, &data_len));
+//      r2p_decode(receive_buf, 256, &checksum, type, data, &data_len);
+//      Serial.println(String(type));
+//      Serial.println("Checksum: " + String(checksum));
+//      Serial.println(data_len);
+//      Serial.println("done decode"); 
+//
+//      Serial.println("Data");
+//      for (i=0; i<data_len; i++){
+//        Serial.println(data[i]); 
+//      }
+//     //Serial.println(data[1]);
+//     changeAngles(data);
+//    } 
  
   // Arduino to Jetson   
 // else{
-  //  update_encoder_angles();
-  //  convert_b16_to_b8(encoder_angles, encoder_anglesB8, 12);
-  //  send("prm", encoder_anglesB8, 12, send_buffer);
- // }
-//  
+    update_encoder_angles();
+    convert_b16_to_b8(encoder_angles, encoder_anglesB8, 6);
+    send("prm", encoder_anglesB8, 12, send_buffer);
+    delay(100);
+//  }
+  
   
 }
 
