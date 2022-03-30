@@ -11,14 +11,14 @@
 */
 
 // step pins 2
-int s0 = 26;
+int s0 = 48;
 int s1 = 35;
 int s2 = 0;
 int s3 = 0;
 int s4 = 0;
 int s5 = 0;
 // direction pins
-int d0 = 27;
+int d0 = 36;
 int d1 = 34;
 int d2 = 0;
 int d3 = 0;
@@ -233,35 +233,35 @@ void loop()
   
   // Jetson to Arduino
   
-//   if (Serial1.available() > 22) {
-//      Serial.println("Bytes available: " + String(Serial1.available()));
-//      Serial1.readBytes(receive_buf, 256);
-//      for (i=0; i<22; i++) {
-//        Serial.println(receive_buf[i]);
-//      }
-//      //Serial.println(r2p_decode(receive_buf, 256, &checksum, type, data, &data_len));
-//      r2p_decode(receive_buf, 256, &checksum, type, data, &data_len);
-//      Serial.println(String(type));
-//      Serial.println("Checksum: " + String(checksum));
-//      Serial.println(data_len);
-//      Serial.println("done decode"); 
-//
-//      Serial.println("Data");
-//      for (i=0; i<data_len; i++){
-//        Serial.println(data[i]); 
-//      }
-//     //Serial.println(data[1]);
-//     changeAngles(data);
-//    } 
+   if (Serial1.available() > 22) {
+      Serial.println("Bytes available: " + String(Serial1.available()));
+      Serial1.readBytes(receive_buf, 256);
+      for (i=0; i<22; i++) {
+        Serial.println(receive_buf[i]);
+      }
+      //Serial.println(r2p_decode(receive_buf, 256, &checksum, type, data, &data_len));
+      r2p_decode(receive_buf, 256, &checksum, type, data, &data_len);
+      Serial.println(String(type));
+      Serial.println("Checksum: " + String(checksum));
+      Serial.println(data_len);
+      Serial.println("done decode"); 
+
+      Serial.println("Data");
+      for (i=0; i<data_len; i++){
+        Serial.println(data[i]); 
+      }
+     //Serial.println(data[1]);
+     changeAngles(data);
+    } 
  
   // Arduino to Jetson   
-// else{
+ else{
     update_encoder_angles();
     convert_b16_to_b8(encoder_angles, encoder_anglesB8, 6);
     send("prm", encoder_anglesB8, 12, send_buffer);
     delay(100);
-//  }
-  
+  }
+                             
   
 }
 
