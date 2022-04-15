@@ -7,27 +7,27 @@
 #define MAX_ENCODER_VAL 16383
 
 /* PROBLEMS LIST
-  1. DO NOT HAVE TWO MOTORS HAVE SAME DIkkmRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
+  1. DO NOT HAVE TWO MOTORS HAVE SAME DIRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
 */
 
 // step pins 2
-int s0 = 26;
-int s1 = 0;
-int s2 = 0;
+int s0 = 49;
+int s1 = 46;
+int s2 = 43;
 int s3 = 0;
 int s4 = 35;
 int s5 = 0;
 // direction pins
-int d0 = 27;
-int d1 = 0;
-int d2 = 0;
+int d0 = 48;
+int d1 = 45;
+int d2 = 42;
 int d3 = 0;
 int d4 = 34;
 int d5 = 0;
 //chip select pins
-int c0 = 0;
-int c1 = 0;
-int c2 = 0;
+int c0 = 47;
+int c1 = 44;
+int c2 = 41;
 int c3 = 0;
 int c4 = 9;
 int c5 = 0;
@@ -76,7 +76,9 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
   // initialized to something that isn't valid
    targetAngle[i] = -1;   // used for testing, this will be an input from object detection
-   targetAngle[4] = 70; // read serial input
+   targetAngle[1] = 100; // read serial input
+   targetAngle[0] = 0;
+   targetAngle[3] = 50;
 
 //    targetAngle[1] = 80;
    //targetAngle[2] = 200;
@@ -88,7 +90,7 @@ void setup()
 //   targetAngle[2] = 40; 
 ////   
   // targetAngle[1] = 80;
-//   targetAngle[2] = 170;  
+//   targetAngle[2] = 10;  
    
   //  targetAngle[3] = 300;
    //targetAngle[4] = 100; 
@@ -101,9 +103,9 @@ void setup()
    
 //    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
 //    move[1] = 1; // enable j2
-//    move[2] = 1; // enable j3 
-//    move[3] = 1; //enable j4
-    move[4] = 1; //enable j5
+ //   move[2] = 1; // enable j3 
+    move[3] = 1; //enable j4
+//    move[4] = 1; //enable j5
 //    move[5] = 1; // enable j6
    
     encoderTarget[i] = targetAngle[i] * 45.51111; //map degree to encoder steps
@@ -147,7 +149,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
 void loop()
 {
-  Serial.println(motors[4].encoder.getPositionSPI(14));
+  Serial.println(motors[3].encoder.getPositionSPI(14));
   for (int i=0; i<6; i++){
      checkDirLongWay(i); 
   }
