@@ -2,35 +2,35 @@
 #include <MotorEncoderLib.h>
 #include <R2Protocol.h>
 
-// use interrupts file for jetson to arduino communicaiton
-
+// This file is used for testing purposes
+// You manually set the target angles in the setup() instead of reading values from object detection
 #define MAX_ENCODER_VAL 16383
 
 /* PROBLEMS LIST
   1. DO NOT HAVE TWO MOTORS HAVE SAME DIRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
 */
 
-// step pins 2
+// step (pulse) pins 
 int s0 = 49;
 int s1 = 46;
 int s2 = 43;
-int s3 = 0;
-int s4 = 35;
-int s5 = 0;
+int s3 = 40;
+int s4 = 37;
+int s5 = 34;
 // direction pins
 int d0 = 48;
 int d1 = 45;
 int d2 = 42;
-int d3 = 0;
-int d4 = 34;
-int d5 = 0;
+int d3 = 39;
+int d4 = 36;
+int d5 = 33;
 //chip select pins
 int c0 = 47;
 int c1 = 44;
 int c2 = 41;
-int c3 = 0;
-int c4 = 9;
-int c5 = 0;
+int c3 = 38;
+int c4 = 35;
+int c5 = 32;
 
 
 int i = 0; 
@@ -67,18 +67,18 @@ void setup()
   reset_input_buffer();
   
 // Only uncomment when you want to zero the encoders
-//  motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
-//  motors[1].encoder.setZeroSPI(c1);     // when J2 motor juts towards me
-//  motors[2].encoder.setZeroSPI(c2);     // zero is at the left
+//  motors[0].encoder.setZeroSPI(c0); 
+//  motors[1].encoder.setZeroSPI(c1);  
+//  motors[2].encoder.setZeroSPI(c2);     
 //  motors[3].encoder.setZeroSPI(c3);
 //  motors[4].encoder.setZeroSPI(c4);
 //  motors[5].encoder.setZeroSPI(c5);
   for (int i=0; i<6; i++){ //for each motor
   // initialized to something that isn't valid
-   targetAngle[i] = -1;   // used for testing, this will be an input from object detection
-   targetAngle[1] = 100; // read serial input
-   targetAngle[0] = 0;
-   targetAngle[3] = 50;
+   targetAngle[i] = -1;   
+   targetAngle[2] =160;
+//   targetAngle[2] = 300;
+//   targetAngle[3] = 0;
 
 //    targetAngle[1] = 80;
    //targetAngle[2] = 200;
@@ -103,14 +103,15 @@ void setup()
    
 //    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
 //    move[1] = 1; // enable j2
- //   move[2] = 1; // enable j3 
-    move[3] = 1; //enable j4
+    move[2] = 1; // enable j3 
+//    move[3] = 1; //enable j4
 //    move[4] = 1; //enable j5
 //    move[5] = 1; // enable j6
-   
+ 
     encoderTarget[i] = targetAngle[i] * 45.51111; //map degree to encoder steps
     encoderPos[i] = motors[i].encoder.getPositionSPI(14); //get starting encoder position
     encoderDiff[i] = encoderTarget[i] - encoderPos[i]; //calculate difference between target and current
+
   }
   
   // initialize interrupt timer1 
@@ -133,7 +134,6 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
     nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i])); // 2nd condition to check if 359degrees is close enough to 0
     //nottolerant = abs(encoderDiff[i]) > 10; // we dont need the extra condition above bc we never pass through zero
-    
     if (move[i]) { //if motor should move
       if (nottolerant){ //if not within tolerance
         state[i] = !state[i]; //toggle state
@@ -149,7 +149,12 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
 void loop()
 {
-  Serial.println(motors[3].encoder.getPositionSPI(14));
+  Serial.println("Position of Motor 2:");
+  Serial.println(motors[2].encoder.getPositionSPI(14));
+  Serial.println("encoder target:");
+  Serial.println(encoderTarget[2]);
+  Serial.println("move[2]:");
+  Serial.println(move[2]);
   for (int i=0; i<6; i++){
      checkDirLongWay(i); 
   }
