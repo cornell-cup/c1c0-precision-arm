@@ -75,7 +75,8 @@ void setup()
 //  motors[5].encoder.setZeroSPI(c5);
   for (int i=0; i<6; i++){ //for each motor
   // initialized to something that isn't valid
-   targetAngle[i] = -1;   
+   targetAngle[i] = -1;  
+//   targetAngle[1] = 160; 
    targetAngle[2] =160;
 //   targetAngle[2] = 300;
 //   targetAngle[3] = 0;
@@ -131,7 +132,6 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
   fill_serial_buffer = true; //check
   
   for (int i=0; i<6; i++){
-
     nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i])); // 2nd condition to check if 359degrees is close enough to 0
     //nottolerant = abs(encoderDiff[i]) > 10; // we dont need the extra condition above bc we never pass through zero
     if (move[i]) { //if motor should move
