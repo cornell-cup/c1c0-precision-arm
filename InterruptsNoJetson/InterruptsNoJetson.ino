@@ -44,7 +44,7 @@ int directionPin[6] = {d0,d1,d2,d3,d4,d5};
 volatile int move [6]; //volatile because changed in ISR
 volatile int state [6]; //volatile because changed in ISR
 
-int reversed[6] = {0, 0, 1, 1, 0, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
+int reversed[6] = {0, 0, 0, 1, 0, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
 
 //Storing encoder values
 volatile float encoderDiff[6];  // units of encoder steps
@@ -75,9 +75,10 @@ void setup()
 //  motors[5].encoder.setZeroSPI(c5);
   for (int i=0; i<6; i++){ //for each motor
   // initialized to something that isn't valid
-   targetAngle[i] = -1;  
-//   targetAngle[1] = 160; 
-   targetAngle[2] =160;
+   targetAngle[i] = -1; 
+   targetAngle[0] = 20; 
+   targetAngle[1] = 100; 
+   targetAngle[2] = 180;
 //   targetAngle[2] = 300;
 //   targetAngle[3] = 0;
 
@@ -102,9 +103,9 @@ void setup()
    
     move[i] = 0; //default is to move none
    
-//    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
+    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
 //    move[1] = 1; // enable j2
-    move[2] = 1; // enable j3 
+//    move[2] = 1; // enable j3 
 //    move[3] = 1; //enable j4
 //    move[4] = 1; //enable j5
 //    move[5] = 1; // enable j6
@@ -149,12 +150,6 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
 void loop()
 {
-  Serial.println("Position of Motor 2:");
-  Serial.println(motors[2].encoder.getPositionSPI(14));
-  Serial.println("encoder target:");
-  Serial.println(encoderTarget[2]);
-  Serial.println("move[2]:");
-  Serial.println(move[2]);
   for (int i=0; i<6; i++){
      checkDirLongWay(i); 
   }
