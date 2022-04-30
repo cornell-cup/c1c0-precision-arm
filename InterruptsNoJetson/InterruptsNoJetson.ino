@@ -77,10 +77,10 @@ void setup()
   // initialized to something that isn't valid
    targetAngle[i] = -1; 
 //   targetAngle[0] = 20; 
-//   targetAngle[1] = 100; 
-//   targetAngle[2] = 10;
+   targetAngle[1] = 100; 
+   targetAngle[2] = 10;
 //   targetAngle[2] = 300;
-   targetAngle[3] = 70;
+//   targetAngle[3] = 70;
 
 //    targetAngle[1] = 80;
    //targetAngle[2] = 200;
@@ -103,10 +103,10 @@ void setup()
    
     move[i] = 0; //default is to move none
    
-//    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-//    move[1] = 1; // enable j2
-//    move[2] = 1; // enable j3 
-    move[3] = 1; //enable j4
+ //   move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
+    move[1] = 1; // enable j2
+    move[2] = 1; // enable j3 
+//    move[3] = 1; //enable j4
 //    move[4] = 1; //enable j5
 //    move[5] = 1; // enable j6
  
@@ -150,11 +150,12 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
 void loop()
 {
-  Serial.println(encoderPos[3]);
+  Serial.println(motors[3].encoder.getPositionSPI(14));
   Serial.println(encoderTarget[3]);
   for (int i=0; i<6; i++){
      checkDirLongWay(i); 
   }
+  //delay(2500);
 }
 
 

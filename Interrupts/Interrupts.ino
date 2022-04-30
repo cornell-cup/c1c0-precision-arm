@@ -10,27 +10,27 @@
   1. DO NOT HAVE TWO MOTORS HAVE SAME DIRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
 */
 
-// step pins 2
-int s0 = 48;
-int s1 = 35;
-int s2 = 0;
-int s3 = 0;
-int s4 = 0;
-int s5 = 0;
+// step (pulse) pins 
+int s0 = 49;
+int s1 = 46;
+int s2 = 43;
+int s3 = 40;
+int s4 = 37;
+int s5 = 34;
 // direction pins
-int d0 = 36;
-int d1 = 34;
-int d2 = 0;
-int d3 = 0;
-int d4 = 0;
-int d5 = 0;
+int d0 = 48;
+int d1 = 45;
+int d2 = 42;
+int d3 = 39;
+int d4 = 36;
+int d5 = 33;
 //chip select pins
-int c0 = 10;
-int c1 = 9;
-int c2 = 0;
-int c3 = 0;
-int c4 = 0;
-int c5 = 0;
+int c0 = 47;
+int c1 = 44;
+int c2 = 41;
+int c3 = 38;
+int c4 = 35;
+int c5 = 32;
 
 //SoftwareSerial mySerial(19,18); // RX, TX
 
@@ -78,8 +78,10 @@ void setup()
   Serial.println("Hello World");
   delay(1000);
   reset_input_buffer();
- // for (i=0; i <256; i++){
-   // Serial.println(receive_buf[i]);
+   for (i=0; i <256; i++){
+    Serial.println(receive_buf[i]);
+   } 
+ 
   //}
 
   //send_buf[0] = 255;
@@ -201,7 +203,7 @@ void update_encoder_angles(){
 void send(char type[5], const uint8_t* data, uint32_t data_len, uint8_t* send_buffer) {
   uint32_t written = r2p_encode(type, data, data_len, send_buffer, 256);
   Serial1.write(send_buffer, written);
-  Serial.println("Bytes written: " + String(written));
+  //Serial.println("Bytes written: " + String(written));
 //  for(int i=0; i <written; i++){
 //    Serial.write(send_buffer[i]);
 //  }
@@ -209,6 +211,9 @@ void send(char type[5], const uint8_t* data, uint32_t data_len, uint8_t* send_bu
 
 void loop()
 {
+   for (i=0; i <256; i++){
+    Serial.println(receive_buf[i]);
+   } 
   for (int i=0; i<6; i++){
      checkDirLongWay(i); 
   }
