@@ -9,6 +9,7 @@
 /* PROBLEMS LIST
   1. DO NOT HAVE TWO MOTORS HAVE SAME DIRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
 */
+// J4 rotates great until it gets to 90 degrees
 
 // step (pulse) pins 
 int s0 = 49;
@@ -76,11 +77,10 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
   // initialized to something that isn't valid
    targetAngle[i] = -1; 
-//   targetAngle[0] = 20; 
-   targetAngle[1] = 100; 
-   targetAngle[2] = 10;
-//   targetAngle[2] = 300;
-//   targetAngle[3] = 70;
+   targetAngle[0] = 30; 
+   targetAngle[1] = 80; 
+   targetAngle[2] = 70;
+   targetAngle[3] = 200;
 
 //    targetAngle[1] = 80;
    //targetAngle[2] = 200;
@@ -103,10 +103,10 @@ void setup()
    
     move[i] = 0; //default is to move none
    
- //   move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
+    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
     move[1] = 1; // enable j2
     move[2] = 1; // enable j3 
-//    move[3] = 1; //enable j4
+    move[3] = 1; //enable j4
 //    move[4] = 1; //enable j5
 //    move[5] = 1; // enable j6
  
@@ -152,6 +152,7 @@ void loop()
 {
   Serial.println(motors[3].encoder.getPositionSPI(14));
   Serial.println(encoderTarget[3]);
+  Serial.println(move[3]);
   for (int i=0; i<6; i++){
      checkDirLongWay(i); 
   }
