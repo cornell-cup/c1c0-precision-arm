@@ -77,7 +77,7 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
   // initialized to something that isn't valid
    targetAngle[i] = -1; 
-   targetAngle[0] = 50; 
+   targetAngle[0] = 300; 
    targetAngle[1] = 110; 
    targetAngle[2] = 300;
    targetAngle[3] = 300;
