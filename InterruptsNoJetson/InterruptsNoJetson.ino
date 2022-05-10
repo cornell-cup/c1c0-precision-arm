@@ -77,10 +77,10 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
   // initialized to something that isn't valid
    targetAngle[i] = -1; 
-   targetAngle[0] = 300; 
-   targetAngle[1] = 110; 
-   targetAngle[2] = 300;
-   targetAngle[3] = 300;
+   targetAngle[0] = 200; 
+   targetAngle[1] = 80; 
+   targetAngle[2] = 150;
+   targetAngle[3] = 70;
 
 //    targetAngle[1] = 80;
    //targetAngle[2] = 200;
@@ -150,9 +150,9 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
 void loop()
 {
-  Serial.println(motors[0].encoder.getPositionSPI(14));
-  Serial.println(encoderTarget[0]);
-  Serial.println(move[0]);
+  Serial.println(motors[1].encoder.getPositionSPI(14));
+  Serial.println(encoderTarget[1]);
+  Serial.println(move[1]);
   for (int i=0; i<6; i++){
      checkDirLongWay(i); 
   }
