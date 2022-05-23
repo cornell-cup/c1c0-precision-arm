@@ -69,7 +69,7 @@ void setup()
   
 // Only uncomment when you want to zero the encoders
 //  motors[0].encoder.setZeroSPI(c0); 
-//  motors[1].encoder.setZeroSPI(c1);  
+  motors[1].encoder.setZeroSPI(c1);  
 //  motors[2].encoder.setZeroSPI(c2);     
 //  motors[3].encoder.setZeroSPI(c3);
 //  motors[4].encoder.setZeroSPI(c4);
@@ -77,10 +77,8 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
   // initialized to something that isn't valid
    targetAngle[i] = -1; 
-   targetAngle[0] = 200; 
    targetAngle[1] = 80; 
-   targetAngle[2] = 150;
-   targetAngle[3] = 70;
+
 
 //    targetAngle[1] = 80;
    //targetAngle[2] = 200;
@@ -103,10 +101,10 @@ void setup()
    
     move[i] = 0; //default is to move none
    
-    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
+//    move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
     move[1] = 1; // enable j2
-    move[2] = 1; // enable j3 
-    move[3] = 1; //enable j4
+//    move[2] = 1; // enable j3 
+//    move[3] = 1; //enable j4
 //    move[4] = 1; //enable j5
 //    move[5] = 1; // enable j6
  
@@ -145,7 +143,10 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
       }
     }
   }
+  
 }
+
+
 
 
 void loop()
