@@ -39,7 +39,7 @@ volatile int counter = 0;
 volatile int fill_serial_buffer = false;
 
 //Storing pins and states for each motor
-MovingSteppersLib motors[6] {{s0,d0,c0},{s1,d1,c1},{s2,d2,c2},{s3,d3,c3},{s4,d4,c4},{s5,d5,c5}};  //Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
+MovingSteppersLib motors[1] {{s0,d0,c0}};  //Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
 int stepPin[6] = {s0,s1,s2,s3,s4,s5}; 
 int directionPin[6] = {d0,d1,d2,d3,d4,d5};  
 volatile int move [6]; //volatile because changed in ISR
