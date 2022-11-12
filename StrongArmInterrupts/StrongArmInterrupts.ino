@@ -1,5 +1,12 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
+#include <Servo.h>
+
+Servo reg_servo;  // create servo object to control a servo
+// twelve servo objects can be created on most boards
+volatile int reg_pos;    // variable to store the servo position  
+volatile int reg_desired_pos;  
+volatile int reg_current_pos;
 
 
 // This file is used for testing purposes
@@ -50,6 +57,7 @@ void redefine_encoder_zero_position(){
 void setup()
 {
   Serial.begin(115200); //Baud Rate
+  reg_servo.attach(9);  // attaches the servo on pin 9 to the servo object
   delay(1000);
   reset_input_buffer();
   // redefine_encoder_zero_position();
@@ -90,6 +98,15 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
       move[0] = 0; //stop moving motor if location reached
     }
   }
+  // regular servo control
+    if ((reg_desired_pos - reg_current_pos) <0){
+      reg_servo.write(reg_pos-1);
+    }  
+  
+    else if ((reg_desired_pos - reg_current_pos) >0){
+      reg_servo.write(reg_pos+1);
+    }
+  
 }
 
 
@@ -97,7 +114,12 @@ void loop() {
   Serial.println(motors[0].encoder.getPositionSPI(14));
   Serial.println(encoderTarget[0]);
   Serial.println(move[0]);
-  checkDirLongWay(1); 
+  checkDirLongWay(1);
+  reg_current_pos = reg_servo.read(); //determine the current position of the regular
+  Serial.println("Current Position:");
+  Serial.println(reg_current_pos);
+  Serial.println("Desired Position");
+  Serial.println(reg_desired_pos);
 }
 
 
