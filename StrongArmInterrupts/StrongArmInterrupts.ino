@@ -5,7 +5,7 @@
 Servo reg_servo;  // create servo object to control a servo
 // twelve servo objects can be created on most boards
 volatile int reg_pos;    // variable to store the servo position  
-volatile int reg_desired_pos;  
+volatile int reg_desired_pos = 100;  
 volatile int reg_current_pos;
 
 
@@ -57,7 +57,8 @@ void redefine_encoder_zero_position(){
 void setup()
 {
   Serial.begin(115200); //Baud Rate
-  reg_servo.attach(9);  // attaches the servo on pin 9 to the servo object
+  //reg_servo.write(0); // choose initial position
+  reg_servo.attach(7);  // attaches the servo on pin 9 to the servo object
   delay(1000);
   reset_input_buffer();
   // redefine_encoder_zero_position();
@@ -99,27 +100,35 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
     }
   }
   // regular servo control
-    if ((reg_desired_pos - reg_current_pos) <0){
-      reg_servo.write(reg_pos-1);
-    }  
-  
-    else if ((reg_desired_pos - reg_current_pos) >0){
-      reg_servo.write(reg_pos+1);
+    reg_current_pos = reg_servo.read(); //determine the current position of the regular
+    if (abs(reg_desired_pos - reg_current_pos) < 1){
+      //reg_servo.detach();
     }
-  
+    else if (abs(reg_desired_pos - reg_current_pos) >= 1){
+      if ((reg_desired_pos - reg_current_pos) <0){
+        reg_servo.write(reg_current_pos-1);
+      }  
+
+      else if ((reg_desired_pos - reg_current_pos) >0){
+        reg_servo.write(reg_current_pos+1);
+      }
+    }
+  Serial.println("Current:");
+  Serial.println(reg_current_pos);  
+  Serial.println("Desired:");
+  Serial.println(reg_desired_pos);
+  Serial.println("Attached:"); 
+  Serial.println(reg_servo.attached());
 }
 
 
 void loop() {
-  Serial.println(motors[0].encoder.getPositionSPI(14));
-  Serial.println(encoderTarget[0]);
-  Serial.println(move[0]);
+//  Serial.println(motors[0].encoder.getPositionSPI(14));
+//  Serial.println(encoderTarget[0]);
+//  Serial.println(move[0]);
   checkDirLongWay(1);
-  reg_current_pos = reg_servo.read(); //determine the current position of the regular
-  Serial.println("Current Position:");
-  Serial.println(reg_current_pos);
-  Serial.println("Desired Position");
-  Serial.println(reg_desired_pos);
+ 
+  
 }
 
 
