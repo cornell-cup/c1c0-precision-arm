@@ -5,7 +5,7 @@
 Servo reg_servo;  // create servo object to control a servo
 // twelve servo objects can be created on most boards
 volatile int reg_pos;    // variable to store the servo position  
-volatile int reg_desired_pos = 100;  
+volatile int reg_desired_pos = 0;  
 volatile int reg_current_pos;
 
 
@@ -58,7 +58,7 @@ void setup()
 {
   Serial.begin(115200); //Baud Rate
   //reg_servo.write(0); // choose initial position
-  reg_servo.attach(7);  // attaches the servo on pin 9 to the servo object
+  reg_servo.attach(7);  // attaches the servo on pin 7 to the servo object
   delay(1000);
   reset_input_buffer();
   // redefine_encoder_zero_position();
