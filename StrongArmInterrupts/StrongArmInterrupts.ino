@@ -1,11 +1,10 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
-#include <Servo.h>
-
+#include <Servo_Hardware_PWM.h>
 Servo reg_servo;  // create servo object to control a servo
 // twelve servo objects can be created on most boards
 volatile int reg_pos;    // variable to store the servo position  
-volatile int reg_desired_pos = 0;  
+volatile int reg_desired_pos = 10;  
 volatile int reg_current_pos;
 
 
@@ -58,7 +57,7 @@ void setup()
 {
   Serial.begin(115200); //Baud Rate
   //reg_servo.write(0); // choose initial position
-  reg_servo.attach(7);  // attaches the servo on pin 7 to the servo object
+  reg_servo.attach(7,544,2400,0);  // attaches the servo on pin 7 to the servo object
   delay(1000);
   reset_input_buffer();
   // redefine_encoder_zero_position();
@@ -85,7 +84,8 @@ void setup()
 
 ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 {
-  TCNT1 = 65518;            // preload timer to 300 us
+  //TCNT1 = 65518;   // preload timer to 300 us
+  TCNT1 = 100000;            
   fill_serial_buffer = true; //check
   
   nottolerant = abs(encoderDiff[0]) > 10 && ((abs(encoderDiff[0]) + 10) < (MAX_ENCODER_VAL + encoderTarget[0])); // 2nd condition to check if 359degrees is close enough to 0
@@ -126,7 +126,13 @@ void loop() {
 //  Serial.println(motors[0].encoder.getPositionSPI(14));
 //  Serial.println(encoderTarget[0]);
 //  Serial.println(move[0]);
-  checkDirLongWay(1);
+ checkDirLongWay(1);
+ Serial.println("Current:");
+ Serial.println(reg_current_pos);  
+ Serial.println("Desired:");
+ Serial.println(reg_desired_pos);
+ Serial.println("Attached:"); 
+ Serial.println(reg_servo.attached());
  
   
 }

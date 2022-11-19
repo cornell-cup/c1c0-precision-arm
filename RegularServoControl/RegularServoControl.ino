@@ -1,4 +1,4 @@
-#include <Servo.h>
+#include <Servo_Hardware_PWM.h>
 
 Servo myservo;  // create servo object to control a servo
 // twelve servo objects can be created on most boards
@@ -34,6 +34,7 @@ void loop() {
     Serial.println(current_pos);
     Serial.println("Desired Position");
     Serial.println(desired_pos);
+    Serial.println(myservo.attached());
 }
 
     
