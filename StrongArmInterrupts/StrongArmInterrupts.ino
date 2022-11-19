@@ -113,12 +113,12 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
         reg_servo.write(reg_current_pos+1);
       }
     }
-  Serial.println("Current:");
-  Serial.println(reg_current_pos);  
-  Serial.println("Desired:");
-  Serial.println(reg_desired_pos);
-  Serial.println("Attached:"); 
-  Serial.println(reg_servo.attached());
+//  Serial.println("Current:");
+//  Serial.println(reg_current_pos);  
+//  Serial.println("Desired:");
+//  Serial.println(reg_desired_pos);
+//  Serial.println("Attached:"); 
+//  Serial.println(reg_servo.attached());
 }
 
 
