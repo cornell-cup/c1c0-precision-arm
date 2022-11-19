@@ -3,7 +3,7 @@
 Servo myservo;  // create servo object to control a servo
 // twelve servo objects can be created on most boards
 int pos = 0;    // variable to store the servo position  
-int desired_pos = 180;  
+int desired_pos = 10;  
 int current_pos;
 
 void setup() {
@@ -34,6 +34,7 @@ void loop() {
     Serial.println(current_pos);
     Serial.println("Desired Position");
     Serial.println(desired_pos);
+}
 
     
 //  current_pos = myservo.read();
@@ -53,4 +54,3 @@ void loop() {
 //      delay(50);                       // waits 50ms for the servo to reach the position
 //    }
 //  }
-}
