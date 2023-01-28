@@ -1,10 +1,10 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
-#include <Servo_Hardware_PWM.h>
+#include <Servo.h>
 Servo reg_servo;  // create servo object to control a servo
 // twelve servo objects can be created on most boards
 volatile int reg_pos;    // variable to store the servo position  
-volatile int reg_desired_pos = 10;  
+volatile int reg_desired_pos = 150;  
 volatile int reg_current_pos;
 
 
@@ -25,6 +25,7 @@ int c0 = 9;
 int i = 0; 
 volatile int counter = 0;
 volatile int fill_serial_buffer = false;
+volatile int servo_wait = 0;
 
 //Storing pins and states for each motor
 MovingSteppersLib motors[1] {{s0,d0,c0}};  //Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
@@ -56,15 +57,16 @@ void redefine_encoder_zero_position(){
 void setup()
 {
   Serial.begin(115200); //Baud Rate
-  //reg_servo.write(0); // choose initial position
-  reg_servo.attach(7,544,2400,0);  // attaches the servo on pin 7 to the servo object
-  delay(1000);
+  reg_servo.write(75); // choose initial position
+  reg_servo.attach(7);  // attaches the servo on pin 7 to the servo object
+  // delay(1000);
   reset_input_buffer();
-  // redefine_encoder_zero_position();
-  targetAngle[0] = 350;
+  redefine_encoder_zero_position();
+  targetAngle[0] = -1;
+  targetAngle[0] = 170;
     
-  pinMode(directionPin[1], OUTPUT); //set direction and step pins as outputs
-  pinMode(stepPin[1], OUTPUT);
+  pinMode(directionPin[0], OUTPUT); //set direction and step pins as outputs
+  pinMode(stepPin[0], OUTPUT);
   move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
   encoderTarget[0] = targetAngle[0] * 45.51111; //map degree to encoder steps
   encoderPos[0] = motors[0].encoder.getPositionSPI(14); //get starting encoder position
@@ -84,8 +86,7 @@ void setup()
 
 ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 {
-  //TCNT1 = 65518;   // preload timer to 300 us
-  TCNT1 = 100000;            
+  TCNT1 = 65518;   // preload timer to 300 us          
   fill_serial_buffer = true; //check
   
   nottolerant = abs(encoderDiff[0]) > 10 && ((abs(encoderDiff[0]) + 10) < (MAX_ENCODER_VAL + encoderTarget[0])); // 2nd condition to check if 359degrees is close enough to 0
@@ -99,20 +100,24 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
       move[0] = 0; //stop moving motor if location reached
     }
   }
-  // regular servo control
-    reg_current_pos = reg_servo.read(); //determine the current position of the regular
-    if (abs(reg_desired_pos - reg_current_pos) < 1){
-      //reg_servo.detach();
-    }
-    else if (abs(reg_desired_pos - reg_current_pos) >= 1){
-      if ((reg_desired_pos - reg_current_pos) <0){
-        reg_servo.write(reg_current_pos-1);
-      }  
 
-      else if ((reg_desired_pos - reg_current_pos) >0){
-        reg_servo.write(reg_current_pos+1);
+  servo_wait += 1;
+  if (servo_wait == 200) {
+    // regular servo control
+      reg_current_pos = reg_servo.read(); //determine the current position of the regular
+      if (abs(reg_desired_pos - reg_current_pos) < 1){
+        reg_servo.detach();
       }
-    }
+      else if (abs(reg_desired_pos - reg_current_pos) >= 1){
+        if ((reg_desired_pos - reg_current_pos) <0){
+          reg_servo.write(reg_current_pos-1);
+        }  
+        else if ((reg_desired_pos - reg_current_pos) >0){
+          reg_servo.write(reg_current_pos+1);
+        }
+      }
+    servo_wait = 0;
+  }
 //  Serial.println("Current:");
 //  Serial.println(reg_current_pos);  
 //  Serial.println("Desired:");
@@ -123,20 +128,29 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
 
 void loop() {
-//  Serial.println(motors[0].encoder.getPositionSPI(14));
-//  Serial.println(encoderTarget[0]);
-//  Serial.println(move[0]);
- checkDirLongWay(1);
- Serial.println("Current:");
- Serial.println(reg_current_pos);  
- Serial.println("Desired:");
- Serial.println(reg_desired_pos);
- Serial.println("Attached:"); 
- Serial.println(reg_servo.attached());
- 
-  
+  Serial.println(motors[0].encoder.getPositionSPI(14));
+  Serial.println(encoderTarget[0]);
+  Serial.println(move[0]);
+  checkDirLongWay(0);
+
+  //regServoIncrement();
 }
 
+void regServoIncrement() {
+  reg_current_pos = reg_servo.read(); //determine the current position of the regular
+  if (abs(reg_desired_pos - reg_current_pos) < 1){
+    reg_servo.detach();
+  }
+  else if (abs(reg_desired_pos - reg_current_pos) >= 1){
+    if ((reg_desired_pos - reg_current_pos) <0){
+      reg_servo.write(reg_current_pos-1);
+    }  
+
+    else if ((reg_desired_pos - reg_current_pos) >0){
+      reg_servo.write(reg_current_pos+1);
+    }
+  }
+}
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
 
