@@ -1,12 +1,17 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
-#include <Servo.h>
+#include <Servo_Hardware_PWM.h>
+
 Servo reg_servo;  // create servo object to control a servo
 // twelve servo objects can be created on most boards
 volatile int reg_pos;    // variable to store the servo position  
-volatile int reg_desired_pos = 150;  
+volatile int reg_desired_pos = 170; 
 volatile int reg_current_pos;
 
+Servo rot_servo; // create continous servo objects
+volatile int rot_pos;
+volatile int rot_desired_pos = 90;
+volatile int rot_current_pos;
 
 // This file is used for testing purposes
 // You manually set the target angles in the setup() instead of reading values from object detection
@@ -57,13 +62,20 @@ void redefine_encoder_zero_position(){
 void setup()
 {
   Serial.begin(115200); //Baud Rate
+
+  // regular servo setup
   reg_servo.write(75); // choose initial position
   reg_servo.attach(7);  // attaches the servo on pin 7 to the servo object
-  // delay(1000);
+
+  // wrist rotation servo setup
+  rot_servo.write(75);
+  rot_servo.attach(6);
+
+  // stepper motor setup
   reset_input_buffer();
   redefine_encoder_zero_position();
   targetAngle[0] = -1;
-  targetAngle[0] = 170;
+  targetAngle[0] = 180;
     
   pinMode(directionPin[0], OUTPUT); //set direction and step pins as outputs
   pinMode(stepPin[0], OUTPUT);
@@ -106,7 +118,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
     // regular servo control
       reg_current_pos = reg_servo.read(); //determine the current position of the regular
       if (abs(reg_desired_pos - reg_current_pos) < 1){
-        reg_servo.detach();
+        //reg_servo.detach();
       }
       else if (abs(reg_desired_pos - reg_current_pos) >= 1){
         if ((reg_desired_pos - reg_current_pos) <0){
@@ -116,14 +128,21 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
           reg_servo.write(reg_current_pos+1);
         }
       }
+      // rotational wrist servo control
+      rot_current_pos = rot_servo.read(); //determine the current position of the regular
+      if (abs(rot_desired_pos - reg_current_pos) < 1){
+        //rot_servo.detach();
+      }
+      else if (abs(rot_desired_pos - rot_current_pos) >= 1){
+        if ((rot_desired_pos - rot_current_pos) <0){
+          rot_servo.write(rot_current_pos-1);
+        }  
+        else if ((rot_desired_pos - rot_current_pos) >0){
+          rot_servo.write(rot_current_pos+1);
+        }
+      }
     servo_wait = 0;
   }
-//  Serial.println("Current:");
-//  Serial.println(reg_current_pos);  
-//  Serial.println("Desired:");
-//  Serial.println(reg_desired_pos);
-//  Serial.println("Attached:"); 
-//  Serial.println(reg_servo.attached());
 }
 
 
