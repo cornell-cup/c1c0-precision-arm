@@ -1,21 +1,12 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
-#include <Servo_Hardware_PWM.h>
-
-Servo reg_servo;  // create servo object to control a servo
-// twelve servo objects can be created on most boards
-volatile int reg_pos;    // variable to store the servo position  
-volatile int reg_desired_pos = 170; 
-volatile int reg_current_pos;
-
-Servo rot_servo; // create continous servo objects
-volatile int rot_pos;
-volatile int rot_desired_pos = 40;
-volatile int rot_current_pos;
 
 // This file is used for testing purposes
 // You manually set the target angles in the setup() instead of reading values from object detection
-#define MAX_ENCODER_VAL 16383*6
+
+float mult = 6;
+
+#define MAX_ENCODER_VAL 16383
 
 
 // step (pulse) pins 
@@ -30,7 +21,9 @@ int c0 = 9;
 int i = 0; 
 volatile int counter = 0;
 volatile int fill_serial_buffer = false;
-volatile int servo_wait = 0;
+
+volatile int revolutions = 0;
+volatile int remainTarget;
 
 //Storing pins and states for each motor
 MovingSteppersLib motors[1] {{s0,d0,c0}};  //Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
@@ -63,25 +56,17 @@ void setup()
 {
   Serial.begin(115200); //Baud Rate
 
-  // regular servo setup
-  reg_servo.write(75); // choose initial position
-  reg_servo.attach(7);  // attaches the servo on pin 7 to the servo object
-
-  // wrist rotation servo setup
-  rot_servo.write(75);
-  rot_servo.attach(6);
-
   // stepper motor setup
   reset_input_buffer();
   //redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
-  targetAngle[0] = -1;
-  targetAngle[0] = 0;
+  //targetAngle[0] = -1;
+  targetAngle[0] = 330;
     
   pinMode(directionPin[0], OUTPUT); //set direction and step pins as outputs
   pinMode(stepPin[0], OUTPUT);
   move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
   encoderTarget[0] = targetAngle[0] * 45.51111; //map degree to encoder steps
-  encoderTarget[0] = encoderTarget[0] * 6; //multiplier for encoder in the wrong place...
+  //encoderTarget[0] = encoderTarget[0] * mult; //multiplier for encoder in the wrong place
   encoderPos[0] = motors[0].encoder.getPositionSPI(14); //get starting encoder position
   encoderDiff[0] = encoderTarget[0] - encoderPos[0]; //calculate difference between target and current
   
@@ -104,6 +89,16 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
   
   nottolerant = abs(encoderDiff[0]) > 10 && ((abs(encoderDiff[0]) + 10) < (MAX_ENCODER_VAL + encoderTarget[0])); // 2nd condition to check if 359degrees is close enough to 0
   //nottolerant = abs(encoderDiff[i]) > 10; // we dont need the extra condition above bc we never pass through zero
+  
+  // account for revolutions
+  if (revolutions >= 1) {
+    encoderTarget[0] = MAX_ENCODER_VAL - 1000;
+    revolutions -= 1;
+  }
+  else {
+    encoderTarget[0] = remainTarget;
+  }
+
   if (move[0]) { //if motor should move
     if (nottolerant){ //if not within tolerance
       state[0] = !state[0]; //toggle state
@@ -113,37 +108,6 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
       move[0] = 0; //stop moving motor if location reached
     }
   }
-
-  servo_wait += 1;
-  if (servo_wait == 200) {
-    // regular servo control
-      reg_current_pos = reg_servo.read(); //determine the current position of the regular
-      if (abs(reg_desired_pos - reg_current_pos) < 1){
-        //reg_servo.detach();
-      }
-      else if (abs(reg_desired_pos - reg_current_pos) >= 1){
-        if ((reg_desired_pos - reg_current_pos) <0){
-          reg_servo.write(reg_current_pos-1);
-        }  
-        else if ((reg_desired_pos - reg_current_pos) >0){
-          reg_servo.write(reg_current_pos+1);
-        }
-      }
-      // rotational wrist servo control
-      rot_current_pos = rot_servo.read(); //determine the current position of the regular
-      if (abs(rot_desired_pos - reg_current_pos) < 1){
-        //rot_servo.detach();
-      }
-      else if (abs(rot_desired_pos - rot_current_pos) >= 1){
-        if ((rot_desired_pos - rot_current_pos) <0){
-          rot_servo.write(rot_current_pos-1);
-        }  
-        else if ((rot_desired_pos - rot_current_pos) >0){
-          rot_servo.write(rot_current_pos+1);
-        }
-      }
-    servo_wait = 0;
-  }
 }
 
 
@@ -151,25 +115,18 @@ void loop() {
   Serial.println(motors[0].encoder.getPositionSPI(14));
   Serial.println(encoderTarget[0]);
   Serial.println(move[0]);
+
+  targetLimit();
   checkDirLongWay(0);
 
-  //regServoIncrement();
 }
 
-void regServoIncrement() {
-  reg_current_pos = reg_servo.read(); //determine the current position of the regular
-  if (abs(reg_desired_pos - reg_current_pos) < 1){
-    reg_servo.detach();
+void targetLimit(){
+  while (encoderTarget[0] > (MAX_ENCODER_VAL - 1000)) {
+    encoderTarget[0] -= (MAX_ENCODER_VAL - 1000);
+    revolutions += 1;
   }
-  else if (abs(reg_desired_pos - reg_current_pos) >= 1){
-    if ((reg_desired_pos - reg_current_pos) <0){
-      reg_servo.write(reg_current_pos-1);
-    }  
-
-    else if ((reg_desired_pos - reg_current_pos) >0){
-      reg_servo.write(reg_current_pos+1);
-    }
-  }
+  remainTarget = encoderTarget[0];
 }
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
