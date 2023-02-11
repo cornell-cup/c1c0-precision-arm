@@ -1,20 +1,20 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
-#include <Servo.h>
+#include <Servo_Hardware_PWM.h>
 
 Servo reg_servo;  // create servo object to control a servo
 volatile int reg_pos;     
-volatile int reg_desired_pos = 170;  
+volatile int reg_desired_pos = 150;  
 volatile int reg_current_pos;
 
 Servo rot_servo; // create servo object to control other servo
 volatile int rot_pos;
-volatile int rot_desired_pos = 40;
+volatile int rot_desired_pos = 30;
 volatile int rot_current_pos;
 
 // This file is used for testing purposes
 // You manually set the target angles in the setup() instead of reading values from object detection
-#define MAX_ENCODER_VAL 16383*6
+#define MAX_ENCODER_VAL 16383
 
 // step (pulse) pins 
 int s0 = 8;
@@ -71,23 +71,13 @@ void setup()
 
   // stepper motor setup
   reset_input_buffer();
-  //redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
-  targetAngle[0] = -1;
-<<<<<<< HEAD
+  redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
   targetAngle[0] = 0;
-=======
-  targetAngle[0] = 15;
->>>>>>> 0f27e385841323e1ca5cdb0cd93b44f67e99f0a4
     
   pinMode(directionPin[0], OUTPUT); //set direction and step pins as outputs
   pinMode(stepPin[0], OUTPUT);
   move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-<<<<<<< HEAD
   encoderTarget[0] = targetAngle[0] * 45.51111; //map degree to encoder steps
-  encoderTarget[0] = encoderTarget[0] * 6; //multiplier for encoder in the wrong place...
-=======
-  encoderTarget[0] = targetAngle[0] * 45.51111 * 15; //map degree to encoder steps
->>>>>>> 0f27e385841323e1ca5cdb0cd93b44f67e99f0a4
   encoderPos[0] = motors[0].encoder.getPositionSPI(14); //get starting encoder position
   encoderDiff[0] = encoderTarget[0] - encoderPos[0]; //calculate difference between target and current
   
@@ -122,7 +112,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
   servo_wait += 1;
 
-  if (servo_wait == 200) { // used to slow down servo movement to be more in line with stepper motor
+  if (servo_wait == 150) { // used to slow down servo movement to be more in line with stepper motor
       // regular servo control
       reg_current_pos = reg_servo.read(); //determine the current position of the regular
       if (abs(reg_desired_pos - reg_current_pos) < 1){
@@ -164,8 +154,8 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 void loop() {
   checkDirLongWay(0);
   // regServoIncrement();
-  // Serial.println(motors[0].encoder.getPositionSPI(14));
-  // Serial.println(encoderTarget[0]);
+  Serial.println(motors[0].encoder.getPositionSPI(14));
+  Serial.println(encoderTarget[0]);
   // Serial.println(move[0]);
 }
 

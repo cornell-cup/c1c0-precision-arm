@@ -60,7 +60,7 @@ void setup()
   reset_input_buffer();
   //redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
   //targetAngle[0] = -1;
-  targetAngle[0] = 330;
+  targetAngle[0] = 0;
     
   pinMode(directionPin[0], OUTPUT); //set direction and step pins as outputs
   pinMode(stepPin[0], OUTPUT);
@@ -90,14 +90,14 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
   nottolerant = abs(encoderDiff[0]) > 10 && ((abs(encoderDiff[0]) + 10) < (MAX_ENCODER_VAL + encoderTarget[0])); // 2nd condition to check if 359degrees is close enough to 0
   //nottolerant = abs(encoderDiff[i]) > 10; // we dont need the extra condition above bc we never pass through zero
   
-  // account for revolutions
-  if (revolutions >= 1) {
-    encoderTarget[0] = MAX_ENCODER_VAL - 1000;
-    revolutions -= 1;
-  }
-  else {
-    encoderTarget[0] = remainTarget;
-  }
+  // // account for revolutions
+  // if (revolutions >= 1) {
+  //   encoderTarget[0] = MAX_ENCODER_VAL - 1000;
+  //   revolutions -= 1;
+  // }
+  // else {
+  //   encoderTarget[0] = remainTarget;
+  // }
 
   if (move[0]) { //if motor should move
     if (nottolerant){ //if not within tolerance
@@ -116,7 +116,7 @@ void loop() {
   Serial.println(encoderTarget[0]);
   Serial.println(move[0]);
 
-  targetLimit();
+  //targetLimit();
   checkDirLongWay(0);
 
 }

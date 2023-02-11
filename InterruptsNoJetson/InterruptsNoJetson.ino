@@ -1,6 +1,6 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
-#include <R2Protocol.h>
+//#include <R2Protocol.h>
 
 // This file is used for testing purposes
 // You manually set the target angles in the setup() instead of reading values from object detection
@@ -13,21 +13,21 @@
 
 // step (pulse) pins 
 int s0 = 49;
-int s1 = 46;
+int s1 = 8;
 int s2 = 43;
 int s3 = 40;
 int s4 = 37;
 int s5 = 34;
 // direction pins
 int d0 = 48;
-int d1 = 45;
+int d1 = 10;
 int d2 = 42;
 int d3 = 39;
 int d4 = 36;
 int d5 = 33;
 //chip select pins
 int c0 = 47;
-int c1 = 44;
+int c1 = 9;
 int c2 = 41;
 int c3 = 38;
 int c4 = 35;
@@ -77,7 +77,7 @@ void setup()
   for (int i=0; i<6; i++){ //for each motor
   // initialized to something that isn't valid
    targetAngle[i] = -1; 
-   targetAngle[1] = 80; 
+   targetAngle[1] = 100; 
 
 
 //    targetAngle[1] = 80;

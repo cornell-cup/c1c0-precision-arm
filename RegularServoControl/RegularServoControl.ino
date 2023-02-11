@@ -1,9 +1,9 @@
-#include <Servo_Hardware_PWM.h>
+#include <Servo.h>
 
 Servo myservo;  // create servo object to control a servo
 // twelve servo objects can be created on most boards
 int pos = 0;    // variable to store the servo position  
-int desired_pos = 10;  
+int desired_pos = 150;  
 int current_pos;
 
 void setup() {
@@ -29,12 +29,22 @@ void step_reg_servo(){
 }
 
 void loop() {
-    step_reg_servo();
-    Serial.println("Current Position:");
-    Serial.println(current_pos);
-    Serial.println("Desired Position");
-    Serial.println(desired_pos);
-    Serial.println(myservo.attached());
+  myservo.write(45); // rotate the motor counterclockwise
+  delay(1000); // keep rotating for 5 seconds (5000 milliseconds)
+
+  myservo.write(90); // stop the motor
+
+  delay(1000); // stay stopped
+
+  myservo.write(135); // rotate the motor clockwise
+
+  delay(1000); // keep rotating :D
+    // step_reg_servo();
+    // Serial.println("Current Position:");
+    // Serial.println(current_pos);
+    // Serial.println("Desired Position");
+    // Serial.println(desired_pos);
+    // Serial.println(myservo.attached());
 }
 
     
