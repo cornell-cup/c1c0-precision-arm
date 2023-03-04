@@ -1,15 +1,16 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
-#include <Servo_Hardware_PWM.h>
+#include <Servo.h>
+#include <R2Protocol.h>
 
 Servo reg_servo;  // create servo object to control a servo
 volatile int reg_pos;     
-volatile int reg_desired_pos = 150;  
+volatile int reg_desired_pos;  
 volatile int reg_current_pos;
 
 Servo rot_servo; // create servo object to control other servo
 volatile int rot_pos;
-volatile int rot_desired_pos = 30;
+volatile int rot_desired_pos;
 volatile int rot_current_pos;
 
 // This file is used for testing purposes
@@ -23,7 +24,7 @@ int s0 = 8;
 int d0 = 10;
 
 //chip select pins
-int c0 = 9;
+int c0 = 4;
 
 int i = 0; 
 volatile int counter = 0;
@@ -69,10 +70,14 @@ void setup()
   rot_servo.write(75);
   rot_servo.attach(6);
 
+  // servo desired positions
+  reg_desired_pos = 90;
+  rot_desired_pos = 90;
+
   // stepper motor setup
-  reset_input_buffer();
+  //reset_input_buffer();
   redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
-  targetAngle[0] = 0;
+  targetAngle[0] = 0; //max is 135 if zeroed correctly 
     
   pinMode(directionPin[0], OUTPUT); //set direction and step pins as outputs
   pinMode(stepPin[0], OUTPUT);
