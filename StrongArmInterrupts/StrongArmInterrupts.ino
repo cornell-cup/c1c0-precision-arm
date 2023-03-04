@@ -1,28 +1,45 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
 #include <Servo.h>
-#include <R2Protocol.h>
+#include "R2Protocol.h"
 
-Servo reg_servo;  // create servo object to control a servo
+// R2Protocol Definitions
+// Jetson to Arduino r2p decode constants
+uint8_t msg_buffer[24];
+uint32_t msg_buffer_len = 24;
+uint16_t checksum; 
+char type[5];
+uint8_t msg[8];
+uint32_t msg_len;
+
+/*
+// Arduino to Jetson r2p encode constants
+#define MAX_BUFFER_SIZE 2048
+uint32_t counter = 0;
+char msg[9] = "baseball";
+uint8_t msg_data_buffer[1];
+uint8_t msg_send_buffer[MAX_BUFFER_SIZE];
+*/
+
+// create servo object to control the wrist 180 deg movement
+Servo reg_servo;
 volatile int reg_pos;     
 volatile int reg_desired_pos;  
 volatile int reg_current_pos;
 
-Servo rot_servo; // create servo object to control other servo
+// create servo objecgt to control wrist rotation
+Servo rot_servo;
 volatile int rot_pos;
 volatile int rot_desired_pos;
 volatile int rot_current_pos;
 
-// This file is used for testing purposes
-// You manually set the target angles in the setup() instead of reading values from object detection
+
 #define MAX_ENCODER_VAL 16383
 
 // step (pulse) pins 
 int s0 = 8;
-
 // direction pins
 int d0 = 10;
-
 //chip select pins
 int c0 = 4;
 
@@ -60,7 +77,14 @@ void redefine_encoder_zero_position(){
 
 void setup()
 {
-  Serial.begin(115200); 
+  Serial.begin(9600); // Serial monitor
+  Serial1.begin(115200); // TX1/RX1
+
+  // Jetson to Arduino r2p decode setup
+  while (Serial1.available() > 0) {
+    Serial1.read();
+    delay(100);
+  }
 
   // regular servo setup
   reg_servo.write(75);  // sets initial position
@@ -76,7 +100,7 @@ void setup()
 
   // stepper motor setup
   //reset_input_buffer();
-  redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
+  //redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
   targetAngle[0] = 0; //max is 135 if zeroed correctly 
     
   pinMode(directionPin[0], OUTPUT); //set direction and step pins as outputs
@@ -147,21 +171,40 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
       }
     servo_wait = 0;
   }
-//  Serial.println("Current:");
-//  Serial.println(reg_current_pos);  
-//  Serial.println("Desired:");
-//  Serial.println(reg_desired_pos);
-//  Serial.println("Attached:"); 
-//  Serial.println(reg_servo.attached());
 }
 
 
 void loop() {
   checkDirLongWay(0);
+
+  // Jetson to Arduino 
+  if (Serial1.available() > 0) {
+    Serial1.readBytes(msg_buffer, msg_buffer_len);
+    r2p_decode(msg_buffer, msg_buffer_len, &checksum, type, msg, &msg_len);
+
+    // for(int i = 0; i < msg_len; i++) {
+    //   Serial.print((char) msg[i]);
+    // }
+    // Serial.println();
+    changeAngles(msg);
+  }
+
   // regServoIncrement();
   Serial.println(motors[0].encoder.getPositionSPI(14));
   Serial.println(encoderTarget[0]);
   // Serial.println(move[0]);
+}
+
+void changeAngles(uint8_t data[]){
+  for (i=0; i<1; i++){
+    if (targetAngle[i] != data[i]){
+      targetAngle[i] = data[i];
+      encoderTarget[i] = targetAngle[i] * 45.51111 * 360/255;
+      encoderPos[i] = motors[i].encoder.getPositionSPI(14);
+      encoderDiff[i] = encoderTarget[i] - encoderPos[i];
+      move[i] = 1;
+    }
+   }
 }
 
 void regServoIncrement() {
