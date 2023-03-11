@@ -182,16 +182,16 @@ void loop() {
     Serial1.readBytes(msg_buffer, msg_buffer_len);
     r2p_decode(msg_buffer, msg_buffer_len, &checksum, type, msg, &msg_len);
 
-    // for(int i = 0; i < msg_len; i++) {
-    //   Serial.print((char) msg[i]);
-    // }
-    // Serial.println();
+    for(int i = 0; i < msg_len; i++) {
+      Serial.print((char) msg[i]);
+    }
+    Serial.println();
     changeAngles(msg);
   }
 
   // regServoIncrement();
-  Serial.println(motors[0].encoder.getPositionSPI(14));
-  Serial.println(encoderTarget[0]);
+  // Serial.println(motors[0].encoder.getPositionSPI(14));
+  // Serial.println(encoderTarget[0]);
   // Serial.println(move[0]);
 }
 

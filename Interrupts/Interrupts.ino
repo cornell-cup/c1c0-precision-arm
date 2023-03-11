@@ -1,6 +1,6 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
-#include <R2Protocol.h>
+#include "R2Protocol.h"
 
 // use interrupts file for jetson to arduino communicaiton
 
@@ -205,9 +205,9 @@ void update_encoder_angles(){
 void send(char type[5], const uint8_t* data, uint32_t data_len, uint8_t* send_buffer) {
   uint32_t written = r2p_encode(type, data, data_len, send_buffer, 256);
   Serial1.write(send_buffer, written);
-  Serial.println("Bytes written: " + String(written));
+  //Serial.println("Bytes written: " + String(written));
   for(int i=0; i < data_len; i++){
-    Serial.println(data[i]);
+    //Serial.println(data[i]);
  }
 }
 
@@ -240,7 +240,7 @@ void loop()
   
   // Jetson to Arduino
   
- //  if (Serial1.available() > 22) {
+  if (Serial1.available() > 22) {
       //Serial.println("Bytes available: " + String(Serial1.available()));
       //Serial1.readBytes(receive_buf, 256);
       for (i=0; i<22; i++) {
@@ -259,7 +259,7 @@ void loop()
       }
      //Serial.println(data[1]);
      changeAngles(data);
- //   } 
+    } 
  
   // Arduino to Jetson   
 // else{
