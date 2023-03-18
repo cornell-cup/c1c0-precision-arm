@@ -18,7 +18,7 @@ uint32_t msg_len;
 
 void setup() {
   Serial.begin(9600); // Serial monitor
-  Serial1.begin(115200); // TX1/RX1 
+  Serial1.begin(38400); // TX1/RX1 
 
   Serial.println("SETUP");
 

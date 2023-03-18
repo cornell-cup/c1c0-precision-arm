@@ -13,15 +13,6 @@ uint8_t data[6];
 uint16_t data_final[3];
 uint32_t data_len;
 
-/*
-// Arduino to Jetson r2p encode constants
-#define MAX_BUFFER_SIZE 2048
-uint32_t counter = 0;
-char msg[9] = "baseball";
-uint8_t msg_data_buffer[1];
-uint8_t msg_send_buffer[MAX_BUFFER_SIZE];
-*/
-
 // create Servo object to control the wrist 180° movement
 Servo reg_servo;
 volatile int reg_pos;     
@@ -42,7 +33,6 @@ int d0 = 10;    // direction pin
 int c0 = 4;     // chip select pin
 
 int i = 0; 
-volatile int counter = 0;
 volatile int fill_serial_buffer = false;
 volatile int servo_wait = 0;
 
@@ -64,8 +54,8 @@ float encoderPos[1];    // units of encoder steps
 volatile int nottolerant; // motor not within expected position
 
 void reset_input_buffer() {
-  while (Serial1.available() > 0) {
-    Serial1.read();
+  while (Serial2.available() > 0) {
+    Serial2.read();
     delay(100);
   }
 }
@@ -78,7 +68,7 @@ void redefine_encoder_zero_position(){
 void setup()
 {
   Serial.begin(9600); // Serial monitor
-  Serial1.begin(115200); // TX1/RX1
+  Serial2.begin(38400); // TX1/RX1 
 
   // Jetson to Arduino r2p decode setup
   reset_input_buffer();
@@ -161,21 +151,37 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
   }
 }
 
+// Arduino to Jetson R2
+uint16_t encoder_angles[] = {0, 0, 0}; // changed to length 3 instead of 6; set to 0 by default
+uint8_t encoder_anglesB8[6];           // changed from 12 to 6
+uint8_t send_buffer[256];
+int k;
+
+void update_encoder_angles(){
+  encoder_angles[0] = (uint16_t) motors[0].encoder.getPositionSPI(14)/ 45.1111;  // how to convert to char and how many digits to round to
+  encoder_angles[1] = (uint16_t) reg_servo.read();
+  encoder_angles[2] = (uint16_t) rot_servo.read();
+}
 
 void loop() {
   checkDirLongWay(0);
 
   // Jetson to Arduino 
-  if (Serial1.available() > 0) {
-    Serial1.readBytes(data_buffer, data_buffer_len);
+  if (Serial2.available() > 0) {
+    Serial2.readBytes(data_buffer, data_buffer_len);
     r2p_decode(data_buffer, data_buffer_len, &checksum, type, data, &data_len);
 
     Serial.println("Data: ");
-    convert_b8_to_b16(data, data_final, 6);
+    convert_b8_to_b16(data, data_final, 6);    
     for(int i = 0; i < 3; i++) {
-      Serial.println(data_final[i]);                                  // this was msg_len[i] before; does changeAngles need uint8_t or uint16_t? (Was 8)
+      Serial.println(data_final[i]);                                 
     }
     changeAngles(data_final);
+  } else {
+    update_encoder_angles();                                   
+    convert_b16_to_b8(encoder_angles, encoder_anglesB8, 3);     
+    send("prm", encoder_anglesB8, 6, send_buffer);    
+    delay(100);         
   }
 }
 
@@ -185,7 +191,7 @@ void changeAngles(uint16_t data[]){
       encoderTarget[0] = targetAngle[0] * 45.51111 * 360/255;
       encoderPos[0] = motors[0].encoder.getPositionSPI(14);
       encoderDiff[0] = encoderTarget[0] - encoderPos[0];
-      move[0] = 1;                                                    // should move come before or after?
+      move[0] = 1;                                                    
     }
 
     Serial.println("New Desired Position for Servo 1: ");
@@ -241,4 +247,14 @@ void convert_b16_to_b8(int *databuffer, uint8_t *data, int len) {
     data[i] = (databuffer[i/2] >> 8) & 255;
     data[i+1] = (databuffer[i/2]) & 255;
   }
+}
+
+void send(char type[5], const uint8_t* data, uint32_t data_len, uint8_t* send_buffer) {
+  uint32_t written = r2p_encode(type, data, data_len, send_buffer, 256);
+  Serial2.write(send_buffer, written);
+  Serial.println("Bytes written: " + String(written));
+  for(int i=0; i < written; i++){
+    //Serial.println(data[i]);
+    Serial.println(send_buffer[i], HEX);
+ }
 }
