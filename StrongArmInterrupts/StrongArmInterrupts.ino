@@ -22,13 +22,13 @@ uint8_t msg_data_buffer[1];
 uint8_t msg_send_buffer[MAX_BUFFER_SIZE];
 */
 
-// create servo object to control the wrist 180 deg movement
+// create Servo object to control the wrist 180° movement
 Servo reg_servo;
 volatile int reg_pos;     
 volatile int reg_desired_pos;  
 volatile int reg_current_pos;
 
-// create servo objecgt to control wrist rotation
+// create Servo object to control wrist rotation
 Servo rot_servo;
 volatile int rot_pos;
 volatile int rot_desired_pos;
@@ -37,38 +37,37 @@ volatile int rot_current_pos;
 
 #define MAX_ENCODER_VAL 16383
 
-// step (pulse) pins 
-int s0 = 8;
-// direction pins
-int d0 = 10;
-//chip select pins
-int c0 = 4;
+int s0 = 8;     // step pin
+int d0 = 10;    // direction pin
+int c0 = 4;     // chip select pin
 
 int i = 0; 
 volatile int counter = 0;
 volatile int fill_serial_buffer = false;
 volatile int servo_wait = 0;
 
-// storing pins and states for each motor
-MovingSteppersLib motors[1] {{s0,d0,c0}};  //Instantiate Motors (StepPin, DirectionPin, EncoderChipSelectPin)
+// storing pins and states for the stepper motor
+MovingSteppersLib motors[1] {{s0,d0,c0}};     // instantiate motor (StepPin, DirectionPin, EncoderChipSelectPin)
 int stepPin[1] = {s0}; 
 int directionPin[1] = {d0};  
-volatile int move [1]; //volatile because changed in ISR
-volatile int state [1]; //volatile because changed in ISR
+volatile int move [1];    //volatile because changed in ISR
+volatile int state [1];   //volatile because changed in ISR
 
 int reversed[1] = {0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
 
 // storing encoder values
-volatile float encoderDiff[1];  // units of encoder steps
+volatile float encoderDiff[1];    // units of encoder steps
 volatile float encoderTarget[1];  // units of encoder steps
-volatile float targetAngle[1];   // units of degrees
-float encoderPos[1];   // units of encoder steps
+volatile float targetAngle[1];    // units of degrees
+float encoderPos[1];    // units of encoder steps
 
 volatile int nottolerant; // motor not within expected position
 
 void reset_input_buffer() {
-  while (Serial1.available() > 0) Serial1.read();
-  delay(100);
+  while (Serial1.available() > 0) {
+    Serial1.read();
+    delay(100);
+  }
 }
 
 void redefine_encoder_zero_position(){
@@ -82,35 +81,23 @@ void setup()
   Serial1.begin(115200); // TX1/RX1
 
   // Jetson to Arduino r2p decode setup
-  while (Serial1.available() > 0) {
-    Serial1.read();
-    delay(100);
-  }
+  reset_input_buffer();
 
-  // regular servo setup
+  // setup for regular Servos
   reg_servo.write(75);  // sets initial position
-  reg_servo.attach(7);  // attaches the servo on pin 7 to the servo object
+  reg_servo.attach(7);  // attaches the servo on pin 7 to the Servo object
+  reg_desired_pos = 90; // desired position
 
-  // other regular servo setup
   rot_servo.write(75);
   rot_servo.attach(6);
-
-  // servo desired positions
-  reg_desired_pos = 90;
   rot_desired_pos = 90;
 
   // stepper motor setup
-  //reset_input_buffer();
   //redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
-  targetAngle[0] = 0; //max is 135 if zeroed correctly 
+  targetAngle[0] = 0; // max is roughly 135 if zeroed correctly 
     
   pinMode(directionPin[0], OUTPUT); //set direction and step pins as outputs
   pinMode(stepPin[0], OUTPUT);
-  move[0] = 1; //enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-  encoderTarget[0] = targetAngle[0] * 45.51111; //map degree to encoder steps
-  encoderPos[0] = motors[0].encoder.getPositionSPI(14); //get starting encoder position
-  encoderDiff[0] = encoderTarget[0] - encoderPos[0]; //calculate difference between target and current
-  
   
   // initialize interrupt timer1 
   noInterrupts();           // disable all interrupts
@@ -142,9 +129,9 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
   servo_wait += 1;
 
-  if (servo_wait == 150) { // used to slow down servo movement to be more in line with stepper motor
-      // regular servo control
-      reg_current_pos = reg_servo.read(); //determine the current position of the regular
+  if (servo_wait == 150) { // used to slow down Servo movement to be more in line with stepper motor
+      // regular Servo control
+      reg_current_pos = reg_servo.read(); //determine the current position
       if (abs(reg_desired_pos - reg_current_pos) < 1){
         reg_servo.detach();
       }
@@ -157,8 +144,8 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
         }
       }
       
-      // rotational wrist servo control
-      rot_current_pos = rot_servo.read(); //determine the current position of the regular
+      // rotational wrist Servo control
+      rot_current_pos = rot_servo.read(); 
       if (abs(rot_desired_pos - reg_current_pos) < 1){
         rot_servo.detach();
       }
@@ -180,50 +167,36 @@ void loop() {
 
   // Jetson to Arduino 
   if (Serial1.available() > 0) {
-    Serial1.readBytes(msg_buffer, msg_buffer_len);
+    Serial1.readBytes(data_buffer, data_buffer_len);
     r2p_decode(data_buffer, data_buffer_len, &checksum, type, data, &data_len);
 
     Serial.println("Data: ");
     convert_b8_to_b16(data, data_final, 6);
-    for(int i = 0; i < msg_len; i++) {
-      Serial.print(msg_final[i]);
+    for(int i = 0; i < 3; i++) {
+      Serial.println(data_final[i]);                                  // this was msg_len[i] before; does changeAngles need uint8_t or uint16_t? (Was 8)
     }
-    Serial.println();
     changeAngles(data_final);
   }
-
-  // regServoIncrement();
-  // Serial.println(motors[0].encoder.getPositionSPI(14));
-  // Serial.println(encoderTarget[0]);
-  // Serial.println(move[0]);
 }
 
-void changeAngles(uint8_t data[]){
-  for (i=0; i<1; i++){
-    if (targetAngle[i] != data[i]){
-      targetAngle[i] = data[i];
-      encoderTarget[i] = targetAngle[i] * 45.51111 * 360/255;
-      encoderPos[i] = motors[i].encoder.getPositionSPI(14);
-      encoderDiff[i] = encoderTarget[i] - encoderPos[i];
-      move[i] = 1;
+void changeAngles(uint16_t data[]){
+    if (targetAngle[0] != data[0]){
+      targetAngle[0] = data[0];
+      encoderTarget[0] = targetAngle[0] * 45.51111 * 360/255;
+      encoderPos[0] = motors[0].encoder.getPositionSPI(14);
+      encoderDiff[0] = encoderTarget[0] - encoderPos[0];
+      move[0] = 1;                                                    // should move come before or after?
     }
-   }
-}
 
-void regServoIncrement() {
-  reg_current_pos = reg_servo.read(); //determine the current position of the regular
-  if (abs(reg_desired_pos - reg_current_pos) < 1){
-    reg_servo.detach();
-  }
-  else if (abs(reg_desired_pos - reg_current_pos) >= 1){
-    if ((reg_desired_pos - reg_current_pos) < 0){
-      reg_servo.write(reg_current_pos - 1);
-    }  
+    Serial.println("New Desired Position for Servo 1: ");
+    Serial.println(data[1]);
+    reg_servo.attach(6);
+    reg_desired_pos = data[1];
 
-    else if ((reg_desired_pos - reg_current_pos) > 0){
-      reg_servo.write(reg_current_pos + 1);
-    }
-  }
+    Serial.println("New Desired Position for Servo 2: ");
+    Serial.println(data[2]);
+    rot_servo.attach(7);
+    rot_desired_pos = data[2];
 }
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
