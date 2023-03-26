@@ -13,26 +13,23 @@ uint8_t data[6];
 uint16_t data_final[3];
 uint32_t data_len;
 
-// create Servo object to control the wrist 180° movement
-Servo reg_servo;
-volatile int reg_pos;     
-volatile int reg_desired_pos;  
-volatile int reg_current_pos;
+// create Servo object to control the wrist bending
+Servo bend_servo;
+volatile int bend_pos;     
+volatile int bend_desired_pos;  
 
 // create Servo object to control wrist rotation
-Servo rot_servo;
-volatile int rot_pos;
-volatile int rot_desired_pos;
-volatile int rot_current_pos;
-
+Servo spin_servo;
+volatile int spin_pos;
+volatile int spin_desired_pos;
 
 #define MAX_ENCODER_VAL 16383
 
+// Elbow Motor Encoder
 int s0 = 8;     // step pin
 int d0 = 10;    // direction pin
 int c0 = 4;     // chip select pin
 
-int i = 0; 
 volatile int fill_serial_buffer = false;
 volatile int servo_wait = 0;
 
@@ -54,8 +51,8 @@ float encoderPos[1];    // units of encoder steps
 volatile int nottolerant; // motor not within expected position
 
 void reset_input_buffer() {
-  while (Serial2.available() > 0) {
-    Serial2.read();
+  while (Serial1.available() > 0) {
+    Serial1.read();
     delay(100);
   }
 }
@@ -68,19 +65,19 @@ void redefine_encoder_zero_position(){
 void setup()
 {
   Serial.begin(9600); // Serial monitor
-  Serial2.begin(38400); // TX1/RX1 
+  Serial1.begin(38400); // TX1/RX1 
 
   // Jetson to Arduino r2p decode setup
   reset_input_buffer();
 
-  // setup for regular Servos
-  reg_servo.write(75);  // sets initial position
-  reg_servo.attach(7);  // attaches the servo on pin 7 to the Servo object
-  reg_desired_pos = 90; // desired position
+  // setup for servo that controls wrist bend
+  bend_servo.write(75);  // sets initial position
+  bend_servo.attach(7);  // attaches the servo on pin 7 to the Servo object
+  bend_desired_pos = 0; // desired position
 
-  rot_servo.write(75);
-  rot_servo.attach(6);
-  rot_desired_pos = 90;
+  spin_servo.write(75);
+  spin_servo.attach(6);
+  spin_desired_pos = 130+30;
 
   // stepper motor setup
   //redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
@@ -88,6 +85,7 @@ void setup()
     
   pinMode(directionPin[0], OUTPUT); //set direction and step pins as outputs
   pinMode(stepPin[0], OUTPUT);
+
   
   // initialize interrupt timer1 
   noInterrupts();           // disable all interrupts
@@ -118,36 +116,11 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
   }
 
   servo_wait += 1;
-
   if (servo_wait == 150) { // used to slow down Servo movement to be more in line with stepper motor
-      // regular Servo control
-      reg_current_pos = reg_servo.read(); //determine the current position
-      if (abs(reg_desired_pos - reg_current_pos) < 1){
-        reg_servo.detach();
-      }
-      else if (abs(reg_desired_pos - reg_current_pos) >= 1){
-        if ((reg_desired_pos - reg_current_pos) < 0){
-          reg_servo.write(reg_current_pos - 1);
-        }  
-        else if ((reg_desired_pos - reg_current_pos) > 0){
-          reg_servo.write(reg_current_pos + 1);
-        }
-      }
-      
-      // rotational wrist Servo control
-      rot_current_pos = rot_servo.read(); 
-      if (abs(rot_desired_pos - reg_current_pos) < 1){
-        rot_servo.detach();
-      }
-      else if (abs(rot_desired_pos - rot_current_pos) >= 1){
-        if ((rot_desired_pos - rot_current_pos) < 0){
-          rot_servo.write(rot_current_pos - 1);
-        }  
-        else if ((rot_desired_pos - rot_current_pos) > 0){
-          rot_servo.write(rot_current_pos + 1);
-        }
-      }
-    servo_wait = 0;
+      // wrist bend and spin Servo control
+      positional_servo_ISR(bend_servo, bend_desired_pos);
+      positional_servo_ISR(spin_servo, spin_desired_pos);
+      servo_wait = 0; //resets the wait timer
   }
 }
 
@@ -159,16 +132,32 @@ int k;
 
 void update_encoder_angles(){
   encoder_angles[0] = (uint16_t) motors[0].encoder.getPositionSPI(14)/ 45.1111;  // how to convert to char and how many digits to round to
-  encoder_angles[1] = (uint16_t) reg_servo.read();
-  encoder_angles[2] = (uint16_t) rot_servo.read();
+  encoder_angles[1] = (uint16_t) bend_servo.read();
+  encoder_angles[2] = (uint16_t) spin_servo.read();
+}
+
+// Function for updating the position of the Servos in the ISR 
+void positional_servo_ISR(Servo servo, int desired_pos) {
+    volatile int current_pos = servo.read();
+    if (abs(desired_pos - current_pos) < 1) {
+      //servo.detach();
+    }
+    else if (abs(desired_pos - current_pos) >= 1) {
+      if ((desired_pos - current_pos) < 0){
+        servo.write(current_pos - 1);
+      }  
+      else if ((desired_pos - current_pos) > 0) {
+        servo.write(current_pos + 1);
+      }
+    }
 }
 
 void loop() {
   checkDirLongWay(0);
 
   // Jetson to Arduino 
-  if (Serial2.available() > 0) {
-    Serial2.readBytes(data_buffer, data_buffer_len);
+  if (Serial1.available() > 0) {
+    Serial1.readBytes(data_buffer, data_buffer_len);
     r2p_decode(data_buffer, data_buffer_len, &checksum, type, data, &data_len);
 
     Serial.println("Data: ");
@@ -194,15 +183,15 @@ void changeAngles(uint16_t data[]){
       move[0] = 1;                                                    
     }
 
-    Serial.println("New Desired Position for Servo 1: ");
+    Serial.println("New Desired Position for Wrist Bend Servo: ");
     Serial.println(data[1]);
-    reg_servo.attach(6);
-    reg_desired_pos = data[1];
+    bend_servo.attach(6);
+    bend_desired_pos = data[1];
 
-    Serial.println("New Desired Position for Servo 2: ");
+    Serial.println("New Desired Position for Wrist Spin Servo: ");
     Serial.println(data[2]);
-    rot_servo.attach(7);
-    rot_desired_pos = data[2];
+    spin_servo.attach(7);
+    spin_desired_pos = data[2];
 }
 
 void checkDirLongWay(int motorNum){ //checks that motor is moving in right direction and switches if not
@@ -251,10 +240,10 @@ void convert_b16_to_b8(int *databuffer, uint8_t *data, int len) {
 
 void send(char type[5], const uint8_t* data, uint32_t data_len, uint8_t* send_buffer) {
   uint32_t written = r2p_encode(type, data, data_len, send_buffer, 256);
-  Serial2.write(send_buffer, written);
+  Serial1.write(send_buffer, written);
   Serial.println("Bytes written: " + String(written));
-  for(int i=0; i < written; i++){
-    //Serial.println(data[i]);
-    Serial.println(send_buffer[i], HEX);
+  for(int i=0; i < data_len; i++){
+    Serial.println(data[i]);
+    //Serial.println(send_buffer[i], HEX);
  }
 }
