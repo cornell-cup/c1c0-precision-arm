@@ -39,15 +39,19 @@ void redefine_encoder_zero_position() {
   motors[0].encoder.setZeroSPI(c0);
 }
 
+Servo other;
+
 void setup()
 {
   Serial.begin(9600); // Serial monitor
   hand_servo.attach(5);
 
-  redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
-  targetAngle[0] = 0; // max is roughly 135 if zeroed correctly 
+  other.attach(7);
+
+  //redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
+  targetAngle[0] = 1; // max is roughly 135 if zeroed correctly 
   encoderTarget[0] = targetAngle[0] * 45.51111; //map degree to encoder steps
-  encoderPos[0] = motors[0].encoder.getPositionSPI(14); //get starting encoder position
+  encoderPos[0] = MAX_ENCODER_VAL - motors[0].encoder.getPositionSPI(14); //get starting encoder position
   encoderDiff[0] = encoderTarget[0] - encoderPos[0]; //calculate difference between target and current
   move[0] = 1;
   
@@ -70,14 +74,18 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
   nottolerant = abs(encoderDiff[0]) > 10 && ((abs(encoderDiff[0]) + 10) < (MAX_ENCODER_VAL + encoderTarget[0])); // 2nd condition to check if 359 degrees is close enough to 0
   if (move[0]) { //if motor should move
     if (nottolerant){ //if not within tolerance
-      // move the cont servo
-      hand_servo.write(135);
-
+      contCheckDir(0);
     }
     else {
       move[0] = 0; //stop moving motor if location reached
-      hand_servo.write(90);
+      hand_servo.write(92);
     }
+  }
+
+  servo_wait += 1;
+
+  if (servo_wait == 150) {
+    positional_servo_ISR(other, 10);
   }
 }
 
@@ -88,9 +96,58 @@ void update_encoder_angles(){
 void loop() {
   update_encoder_angles(); 
   encoderPos[0] = motors[0].encoder.getPositionSPI(14);
-  Serial.println(encoderPos[0]);                                  
+
+  //Serial.println(encoderTarget[0]);
+
+  Serial.println(encoderTarget[0]);
+  Serial.println(encoderPos[0]);
+
+  //other.write(30); 
+
+  // hand_servo.write(122);
+  // delay(3000);   
+  // hand_servo.write(92);
+  // delay(1000);
+  // hand_servo.write(122);
+  // delay(3000); 
+  // hand_servo.write(92);              
 }
 
-void contCheckDir() {
+void contCheckDir(int contNum) {
+  // 92/93 - zero rotation
+  encoderPos[contNum] = MAX_ENCODER_VAL - motors[contNum].encoder.getPositionSPI(14);
   
+  if (encoderPos[contNum] == 65535){
+    move[contNum] = 0; //stop moving if encoder reads error message
+  }
+
+  if ((MAX_ENCODER_VAL - 1000) < encoderPos[contNum]) {  // if servo goes past zero incorrectly, we want to make sure it moves back in the correct direction
+    encoderPos[contNum] = 0;
+  }
+
+  encoderDiff[contNum] = encoderTarget[contNum] - encoderPos[contNum];
+
+  if(encoderDiff[contNum] > 0){
+    // close the hand
+    hand_servo.write(22); 
+    }
+  else {
+    // open hand
+    hand_servo.write(132); 
+  }
+}
+
+void positional_servo_ISR(Servo servo, int desired_pos) {
+    volatile int current_pos = servo.read();
+    if (abs(desired_pos - current_pos) < 1) {
+      //servo.detach();
+    }
+    else if (abs(desired_pos - current_pos) >= 1) {
+      if ((desired_pos - current_pos) < 0){
+        servo.write(current_pos - 1);
+      }  
+      else if ((desired_pos - current_pos) > 0) {
+        servo.write(current_pos + 1);
+      }
+    }
 }
