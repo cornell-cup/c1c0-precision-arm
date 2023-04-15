@@ -46,7 +46,7 @@ void setup()
   Serial.begin(9600); // Serial monitor
   hand_servo.attach(5);
 
-  other.attach(7);
+  //other.attach(7);
 
   //redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
   targetAngle[0] = 1; // max is roughly 135 if zeroed correctly 
@@ -74,6 +74,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
   nottolerant = abs(encoderDiff[0]) > 10 && ((abs(encoderDiff[0]) + 10) < (MAX_ENCODER_VAL + encoderTarget[0])); // 2nd condition to check if 359 degrees is close enough to 0
   if (move[0]) { //if motor should move
     if (nottolerant){ //if not within tolerance
+      //hand_servo.write(132);
       contCheckDir(0);
     }
     else {
@@ -86,6 +87,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 
   if (servo_wait == 150) {
     positional_servo_ISR(other, 10);
+    servo_wait = 0;
   }
 }
 
@@ -97,14 +99,12 @@ void loop() {
   update_encoder_angles(); 
   encoderPos[0] = motors[0].encoder.getPositionSPI(14);
 
-  //Serial.println(encoderTarget[0]);
-
   Serial.println(encoderTarget[0]);
   Serial.println(encoderPos[0]);
 
   //other.write(30); 
 
-  // hand_servo.write(122);
+  //hand_servo.write(122);
   // delay(3000);   
   // hand_servo.write(92);
   // delay(1000);
