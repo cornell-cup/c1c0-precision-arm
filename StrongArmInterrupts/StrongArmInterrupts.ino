@@ -7,17 +7,17 @@
 
 // R2Protocol Definitions
 // Jetson to Arduino r2p decode constants
-uint8_t data_buffer[22];
-uint32_t data_buffer_len = 22;
+uint8_t data_buffer[28];          // Set equal to 16 + 2 * length of angle array
+uint32_t data_buffer_len = 28;    
 uint16_t checksum; 
 char type[5];
-uint8_t data[6];
-uint16_t data_final[3];
+uint8_t data[12];            // was 6 ------
+uint16_t data_final[6];     // was 3 ------
 uint32_t data_len;
 
 // Arduino to Jetson R2
-uint16_t encoder_angles[] = {0, 0, 0}; // changed to length 3 instead of 6; set to 0 by default
-uint8_t encoder_anglesB8[6];           // changed from 12 to 6
+uint16_t encoder_angles[] = {0, 0, 0, 0, 0, 0};   // changed to length 3 instead of 6; set to 0 by default
+uint8_t encoder_anglesB8[12];   // was 6 -----        // changed from 12 to 6
 uint8_t send_buffer[256];
 int k;
 
@@ -73,17 +73,14 @@ void setup() {
 
   // SERVOS
   // Setup for servo that controls wrist bend
-  bend_servo.write(75);  
   bend_servo.attach(7);  
-  bend_desired_pos = 90; 
+  bend_desired_pos = 0; 
   
   // Setup for servo that controls wrist spin 
-  spin_servo.write(75);
   spin_servo.attach(6);
   spin_desired_pos = 0;
 
   // Setup for the servo that controls the hand 
-  hand_servo.write(92);
   hand_servo.attach(5);
   targetAngle[1] = 1;   // Hand encoder setup: 80 is closed and 1 is open
 
@@ -93,13 +90,7 @@ void setup() {
   pinMode(stepPin[0], OUTPUT);
 
   // ENCODERS - first bool for elbow encoder and second bool for hand (true = zero)
-  redefine_encoder_zero_position(false, true); 
-  for (int i = 0; i<2; i++) {
-    encoderTarget[i] = targetAngle[i] * 45.51111 * 360/255;
-    encoderPos[i] = motors[i].encoder.getPositionSPI(14);
-    encoderDiff[i] = encoderTarget[i] - encoderPos[i];
-    move[i] = 1;
-  }
+  redefine_encoder_zero_position(false, false); 
 
   // ISR TIMER
   // Initialize interrupt timer1 
@@ -132,6 +123,7 @@ ISR(TIMER1_OVF_vect) {        // ISR to pulse pins of moving motors
   not_tolerant_hand = abs(encoderDiff[1]) > 10 && ((abs(encoderDiff[1]) + 10) < (MAX_ENCODER_VAL + encoderTarget[1]));
   if (move[1]) { 
     if (not_tolerant_hand) {    // move continuous servo
+      //hand_servo.write(132);
       cont_check_dir(1);
     } else {
       move[1] = 0;              // stop moving motor if location reached
@@ -150,22 +142,22 @@ ISR(TIMER1_OVF_vect) {        // ISR to pulse pins of moving motors
 void loop() {
   checkDirLongWay(0);
 
-  // Jetson to Arduino 
-  if (Serial1.available() > 0) {
+
+  if (Serial1.available() > 0) {    // Jetson to Arduino
     Serial1.readBytes(data_buffer, data_buffer_len);
     r2p_decode(data_buffer, data_buffer_len, &checksum, type, data, &data_len);
 
     Serial.println("Data: ");
-    convert_b8_to_b16(data, data_final, 6);    
-    for (int i = 0; i < 3; i++) {
+    convert_b8_to_b16(data, data_final, 12);         
+    for (int i = 0; i < 6; i++) {     
       Serial.println(data_final[i]);                                 
     }
     changeAngles(data_final);
-  } else {
+  } else {                          // Arduino to Jetson
     update_encoder_angles();                                   
-    convert_b16_to_b8(encoder_angles, encoder_anglesB8, 3);     
-    send("prm", encoder_anglesB8, 6, send_buffer);    
-    delay(100);         
+    convert_b16_to_b8(encoder_angles, encoder_anglesB8, 6);     // was 3 -----    
+    //send("prm", encoder_anglesB8, 12, send_buffer);     // was 6 -----
+    //delay(100);         
   }
 }
 
@@ -173,7 +165,7 @@ void update_encoder_angles() {
   encoder_angles[0] = (uint16_t) motors[0].encoder.getPositionSPI(14)/ 45.1111;  // how to convert to char and how many digits to round to
   encoder_angles[1] = (uint16_t) bend_servo.read();
   encoder_angles[2] = (uint16_t) spin_servo.read();
-  // Add two more for continuous Servo and shoulder motor
+  encoder_angles[3] = (uint16_t) motors[1].encoder.getPositionSPI(14)/ 45.1111;
 }
 
 // Function for updating the position of the Servos in the ISR 
@@ -193,7 +185,7 @@ void positional_servo_ISR(Servo servo, int desired_pos) {
 void changeAngles(uint16_t data[]) {
     if (targetAngle[0] != data[0]) {
       targetAngle[0] = data[0];
-      encoderTarget[0] = targetAngle[0] * 45.51111 * 360/255;
+      encoderTarget[0] = targetAngle[0] * 45.51111 * 360/255; // we don't know why 360/255 in there
       encoderPos[0] = motors[0].encoder.getPositionSPI(14);
       encoderDiff[0] = encoderTarget[0] - encoderPos[0];
       move[0] = 1;                                                    
@@ -208,6 +200,16 @@ void changeAngles(uint16_t data[]) {
     Serial.println(data[2]);
     spin_servo.attach(7);
     spin_desired_pos = data[2];
+
+    Serial.println("New Desired Position for Hand: ");
+    Serial.println(data[3]);
+    if (targetAngle[1] != data[3]) {
+      targetAngle[1] = data[3];
+      encoderTarget[1] = targetAngle[1] * 45.51111;
+      encoderPos[1] = motors[1].encoder.getPositionSPI(14);
+      encoderDiff[1] = encoderTarget[1] - encoderPos[1];
+      move[1] = 1;
+    }
 }
 
 // Checks that motor is moving in right direction and switches if not

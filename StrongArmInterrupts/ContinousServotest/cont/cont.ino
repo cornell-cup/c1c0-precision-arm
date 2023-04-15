@@ -104,7 +104,7 @@ void loop() {
 
   //other.write(30); 
 
-  //hand_servo.write(122);
+  // hand_servo.write(122);
   // delay(3000);   
   // hand_servo.write(92);
   // delay(1000);
