@@ -8,7 +8,7 @@
 Servo hand_servo;
 
 // Elbow Encoder Pins - step and direction (motor pins) are arbitrary values
-int s0 = 30;     // step pin
+int s0 = 30;    // step pin
 int d0 = 31;    // direction pin
 int c0 = 4;     // chip select pin
 
@@ -41,12 +41,11 @@ void redefine_encoder_zero_position() {
 
 Servo other;
 
-void setup()
-{
+void setup() {
   Serial.begin(9600); // Serial monitor
   hand_servo.attach(5);
 
-  //other.attach(7);
+  other.attach(7);
 
   //redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
   targetAngle[0] = 1; // max is roughly 135 if zeroed correctly 
@@ -74,7 +73,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
   nottolerant = abs(encoderDiff[0]) > 10 && ((abs(encoderDiff[0]) + 10) < (MAX_ENCODER_VAL + encoderTarget[0])); // 2nd condition to check if 359 degrees is close enough to 0
   if (move[0]) { //if motor should move
     if (nottolerant){ //if not within tolerance
-      //hand_servo.write(132);
+      //hand_servo.write(130);
       contCheckDir(0);
     }
     else {
@@ -83,12 +82,12 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
     }
   }
 
-  servo_wait += 1;
+  // servo_wait += 1;
 
-  if (servo_wait == 150) {
-    positional_servo_ISR(other, 10);
-    servo_wait = 0;
-  }
+  // if (servo_wait == 150) {
+  //   positional_servo_ISR(other, 10);
+  //   servo_wait = 0;
+  // }
 }
 
 void update_encoder_angles(){
@@ -104,7 +103,7 @@ void loop() {
 
   //other.write(30); 
 
-  // hand_servo.write(122);
+  //hand_servo.write(122);
   // delay(3000);   
   // hand_servo.write(92);
   // delay(1000);

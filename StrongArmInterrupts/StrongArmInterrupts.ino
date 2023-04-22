@@ -11,25 +11,27 @@ uint8_t data_buffer[28];          // Set equal to 16 + 2 * length of angle array
 uint32_t data_buffer_len = 28;    
 uint16_t checksum; 
 char type[5];
-uint8_t data[12];            // was 6 ------
-uint16_t data_final[6];     // was 3 ------
+uint8_t data[12];            
+uint16_t data_final[6];     
 uint32_t data_len;
 
 // Arduino to Jetson R2
-uint16_t encoder_angles[] = {0, 0, 0, 0, 0, 0};   // changed to length 3 instead of 6; set to 0 by default
-uint8_t encoder_anglesB8[12];   // was 6 -----        // changed from 12 to 6
+uint16_t encoder_angles[] = {0, 0, 0, 0, 0, 0};   
+uint8_t encoder_anglesB8[12];   
 uint8_t send_buffer[256];
 int k;
 
 // Create Servo object to control the wrist bending
 Servo bend_servo;
 volatile int bend_pos;     
-volatile int bend_desired_pos;  
+volatile int bend_desired_pos;    
+volatile bool bend_at_desired; // True means at desired, False means not at desired 
 
 // Create Servo object to control wrist spin
 Servo spin_servo;
 volatile int spin_pos;
 volatile int spin_desired_pos;
+volatile bool spin_at_desired; // True means at desired, False means not at desired 
 
 // Create continuous Servo object to control the hand 
 Servo hand_servo;
@@ -37,7 +39,7 @@ Servo hand_servo;
 // Stepper motor (elbow) encoder
 int s0 = 8;     // step pin
 int d0 = 10;    // direction pin
-int c0 = 35;     // chip select pin (had this on 5, changing for now)
+int c0 = 35;    // chip select pin (had this on 5, changing for now)
 
 // Continuous hand encoder pins - step and direction are arbitrary
 int s1 = 30;    // step pin - useless
@@ -46,6 +48,7 @@ int c1 = 4;     // chip select pin - useful
 
 volatile int fill_serial_buffer = false;
 volatile int servo_wait = 0;
+volatile int cont_wait = 0;
 
 // Storing pins and states for the stepper motor (index 0) and continuous Servo (index 1)
 MovingSteppersLib motors[2] {{s0,d0,c0}, {s1,d1,c1}};     
@@ -74,11 +77,13 @@ void setup() {
   // SERVOS
   // Setup for servo that controls wrist bend
   bend_servo.attach(7);  
-  bend_desired_pos = 0; 
+  bend_desired_pos = 90; 
+  bend_at_desired = false;
   
   // Setup for servo that controls wrist spin 
   spin_servo.attach(6);
   spin_desired_pos = 0;
+  spin_at_desired = false;
 
   // Setup for the servo that controls the hand 
   hand_servo.attach(5);
@@ -90,15 +95,15 @@ void setup() {
   pinMode(stepPin[0], OUTPUT);
 
   // ENCODERS - first bool for elbow encoder and second bool for hand (true = zero)
-  redefine_encoder_zero_position(false, false); 
+  redefine_encoder_zero_position(false, false);
 
   // ISR TIMER
   // Initialize interrupt timer1 
   noInterrupts();           // disable all interrupts
   TCCR1A = 0;
   TCCR1B = 0;
-
   TCNT1 = 65518;            // preload timer 65536-(16MHz/256/4Hz)
+
   TCCR1B |= (1 << CS12);    // 256 prescaler 
   TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
   interrupts();             // enable all interrupts
@@ -120,21 +125,26 @@ ISR(TIMER1_OVF_vect) {        // ISR to pulse pins of moving motors
   }
   
   // HAND CONTINUOUS ISR
-  not_tolerant_hand = abs(encoderDiff[1]) > 10 && ((abs(encoderDiff[1]) + 10) < (MAX_ENCODER_VAL + encoderTarget[1]));
-  if (move[1]) { 
-    if (not_tolerant_hand) {    // move continuous servo
-      //hand_servo.write(132);
-      cont_check_dir(1);
-    } else {
-      move[1] = 0;              // stop moving motor if location reached
-      hand_servo.write(92);
+  cont_wait += 1;
+  if (cont_wait == 100) { // used to slow down cont Servo movement - prevents Servo library hazards
+    not_tolerant_hand = abs(encoderDiff[1]) > 10 && ((abs(encoderDiff[1]) + 10) < (MAX_ENCODER_VAL + encoderTarget[1]));
+    if (move[1] && bend_at_desired  /*&& spin_at_desired && !not_tolerant_elbow*/) { 
+      if (not_tolerant_hand) {    // move continuous servo
+        //hand_servo.write(132);
+        cont_check_dir(1);
+      } else {
+        move[1] = 0;              // stop moving motor if location reached
+        hand_servo.write(92);
+      }
     }
+    cont_wait = 0;
   }
 
+  // POSITIONAL SERVOS ISR
   servo_wait += 1;
-  if (servo_wait == 150) { // used to slow down Servo movement to be more in line with stepper motor
-      positional_servo_ISR(bend_servo, bend_desired_pos);
-      positional_servo_ISR(spin_servo, spin_desired_pos);
+  if (servo_wait == 100) { // used to slow down Servo movement to be more in line with stepper motor
+      bend_at_desired = positional_servo_ISR(bend_servo, bend_desired_pos);
+      spin_at_desired = positional_servo_ISR(spin_servo, spin_desired_pos);
       servo_wait = 0;   //resets the wait timer
   }
 }
@@ -142,73 +152,77 @@ ISR(TIMER1_OVF_vect) {        // ISR to pulse pins of moving motors
 void loop() {
   checkDirLongWay(0);
 
-
   if (Serial1.available() > 0) {    // Jetson to Arduino
     Serial1.readBytes(data_buffer, data_buffer_len);
     r2p_decode(data_buffer, data_buffer_len, &checksum, type, data, &data_len);
 
-    Serial.println("Data: ");
+    //Serial.println("Data: ");
     convert_b8_to_b16(data, data_final, 12);         
     for (int i = 0; i < 6; i++) {     
-      Serial.println(data_final[i]);                                 
+      //Serial.println(data_final[i]);                                 
     }
     changeAngles(data_final);
   } else {                          // Arduino to Jetson
     update_encoder_angles();                                   
-    convert_b16_to_b8(encoder_angles, encoder_anglesB8, 6);     // was 3 -----    
-    //send("prm", encoder_anglesB8, 12, send_buffer);     // was 6 -----
-    //delay(100);         
+    convert_b16_to_b8(encoder_angles, encoder_anglesB8, 6);         
+    send("prm", encoder_anglesB8, 12, send_buffer);     
+    delay(100);         
   }
 }
 
 void update_encoder_angles() {
-  encoder_angles[0] = (uint16_t) motors[0].encoder.getPositionSPI(14)/ 45.1111;  // how to convert to char and how many digits to round to
+  encoder_angles[0] = (uint16_t) motors[0].encoder.getPositionSPI(14)/ 45.51111;  // how to convert to char and how many digits to round to
   encoder_angles[1] = (uint16_t) bend_servo.read();
   encoder_angles[2] = (uint16_t) spin_servo.read();
-  encoder_angles[3] = (uint16_t) motors[1].encoder.getPositionSPI(14)/ 45.1111;
+  encoder_angles[3] = (uint16_t) (MAX_ENCODER_VAL - motors[1].encoder.getPositionSPI(14))/45.51111;
 }
 
 // Function for updating the position of the Servos in the ISR 
-void positional_servo_ISR(Servo servo, int desired_pos) {
+bool positional_servo_ISR(Servo servo, int desired_pos) {
     volatile int current_pos = servo.read();
+    boolean at_desired;
     if (abs(desired_pos - current_pos) < 1) {
-      //servo.detach();
+      //Serial.println("set to true");
+      at_desired = true; // update if at desired position
+      // servo.detach();
     } else if (abs(desired_pos - current_pos) >= 1) {
+      //Serial.println("set to false");
+      at_desired = false;
       if ((desired_pos - current_pos) < 0) {
         servo.write(current_pos - 1);
       } else if ((desired_pos - current_pos) > 0) {
         servo.write(current_pos + 1);
       }
     }
+  
+    return at_desired;
 }
 
 void changeAngles(uint16_t data[]) {
     if (targetAngle[0] != data[0]) {
       targetAngle[0] = data[0];
-      encoderTarget[0] = targetAngle[0] * 45.51111 * 360/255; // we don't know why 360/255 in there
+      encoderTarget[0] = targetAngle[0] * 45.51111 * 360/255;
       encoderPos[0] = motors[0].encoder.getPositionSPI(14);
       encoderDiff[0] = encoderTarget[0] - encoderPos[0];
       move[0] = 1;                                                    
     }
 
-    Serial.println("New Desired Position for Wrist Bend Servo: ");
-    Serial.println(data[1]);
+    //Serial.println("New Desired Position for Wrist Bend Servo: ");
+    //Serial.println(data[1]);
     bend_servo.attach(6);
     bend_desired_pos = data[1];
 
-    Serial.println("New Desired Position for Wrist Spin Servo: ");
-    Serial.println(data[2]);
+    //Serial.println("New Desired Position for Wrist Spin Servo: ");
+    //Serial.println(data[2]);
     spin_servo.attach(7);
     spin_desired_pos = data[2];
 
-    Serial.println("New Desired Position for Hand: ");
-    Serial.println(data[3]);
     if (targetAngle[1] != data[3]) {
       targetAngle[1] = data[3];
       encoderTarget[1] = targetAngle[1] * 45.51111;
       encoderPos[1] = motors[1].encoder.getPositionSPI(14);
       encoderDiff[1] = encoderTarget[1] - encoderPos[1];
-      move[1] = 1;
+      move[1] = 1;                                                    
     }
 }
 
@@ -248,10 +262,10 @@ void cont_check_dir(int contNum) {
 
   if (encoderDiff[contNum] > 0) {
     // Close the hand
-    hand_servo.write(22); 
+    hand_servo.write(10); 
   } else {
     // Open hand
-    hand_servo.write(132); 
+    hand_servo.write(150); 
   }
 }
 
@@ -281,9 +295,9 @@ void convert_b16_to_b8(int *databuffer, uint8_t *data, int len) {
 void send(char type[5], const uint8_t* data, uint32_t data_len, uint8_t* send_buffer) {
   uint32_t written = r2p_encode(type, data, data_len, send_buffer, 256);
   Serial1.write(send_buffer, written);
-  Serial.println("Bytes written: " + String(written));
+  //Serial.println("Bytes written: " + String(written));
   for (int i=0; i < data_len; i++) {
-    Serial.println(data[i]);
+    //Serial.println(data[i]);
     //Serial.println(send_buffer[i], HEX);
   }
 }
