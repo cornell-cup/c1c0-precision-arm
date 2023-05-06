@@ -34,13 +34,13 @@ def read_encoder_values():
 	'''
 	global ser
 	# initialize the array 
-	encoderAngle = [0,0,0]
+	encoderAngle = [0,0,0,0,0,0]
 	try:
 		while True:
 			good_data = False
 			while (not good_data):
 				# read the serial port
-				ser_msg = ser.read(22)#_until(b"\xa2\xb2\xc2")
+				ser_msg = ser.read(28)#_until(b"\xa2\xb2\xc2")
 				#ser_msg += ser.read(19)
 				#print(ser_msg)
 				# decode the serial message
@@ -54,12 +54,12 @@ def read_encoder_values():
 					#ser.reset_input_buffer()
 					print('bad data')
 			# convert array of length 6 to array of length 3		
-			for i in range(0, 6, 2):
+			for i in range(0, 12, 2):
 				encoderAngle[i//2] = (msg[i]<<8) | msg[i+1]
 			print(encoderAngle)
 		
 	except KeyboardInterrupt: 		
-			for i in range(0, 6, 2):
+			for i in range(0, 12, 2):
             			ser.close()
 	
 	
