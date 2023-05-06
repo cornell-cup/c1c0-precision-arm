@@ -47,7 +47,7 @@ void setup() {
 
   other.attach(7);
 
-  //redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
+  redefine_encoder_zero_position(); // uncomment this whenever you want to set zero position
   targetAngle[0] = 1; // max is roughly 135 if zeroed correctly 
   encoderTarget[0] = targetAngle[0] * 45.51111; //map degree to encoder steps
   encoderPos[0] = MAX_ENCODER_VAL - motors[0].encoder.getPositionSPI(14); //get starting encoder position
@@ -73,8 +73,8 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
   nottolerant = abs(encoderDiff[0]) > 10 && ((abs(encoderDiff[0]) + 10) < (MAX_ENCODER_VAL + encoderTarget[0])); // 2nd condition to check if 359 degrees is close enough to 0
   if (move[0]) { //if motor should move
     if (nottolerant){ //if not within tolerance
-      //hand_servo.write(130);
-      contCheckDir(0);
+      hand_servo.write(130);
+      //contCheckDir(0);
     }
     else {
       move[0] = 0; //stop moving motor if location reached
