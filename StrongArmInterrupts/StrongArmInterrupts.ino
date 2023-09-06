@@ -44,7 +44,7 @@ int c0 = 35;    // chip select pin (had this on 5, changing for now)
 // Continuous hand encoder pins - step and direction are arbitrary
 int s1 = 30;    // step pin - useless
 int d1 = 31;    // direction pin - useless
-int c1 = 4;     // chip select pin - useful
+int c1 = 40;     // chip select pin - useful
 
 volatile int fill_serial_buffer = false;
 volatile int servo_wait = 0;
