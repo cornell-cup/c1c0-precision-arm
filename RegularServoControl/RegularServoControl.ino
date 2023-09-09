@@ -9,7 +9,7 @@ int current_pos;
 void setup() {
   Serial.begin(9600);
   myservo.write(0);
-  myservo.attach(5);  // attaches the servo on pin 9 to the servo object
+  myservo.attach(6);  // attaches the servo on pin 9 to the servo object
 }
 
 void step_reg_servo(){
@@ -29,8 +29,8 @@ void step_reg_servo(){
 }
 
 void loop() {
-  myservo.write(180); // rotate the motor counterclockwise
-  // delay(1000); // keep rotating for 5 seconds (5000 milliseconds)
+  myservo.write(150); // rotate the motor counterclockwise
+  delay(1000); // keep rotating for 5 seconds (5000 milliseconds)
 
   // myservo.write(90); // stop the motor
 

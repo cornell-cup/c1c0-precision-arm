@@ -5,11 +5,7 @@
 
 #define MAX_ENCODER_VAL 16383
 
-// Create Servo object to control the wrist bending
-Servo bend_servo;
-volatile int bend_pos;     
-volatile int bend_desired_pos;  
-
+// Currently, the spin Servo motor is interpreted in code to be positional; current one is continuous, but may switch
 // Create Servo object to control wrist spin
 Servo spin_servo;
 volatile int spin_pos;
@@ -27,6 +23,19 @@ int c0 = 35;    // chip select pin (had this on 5, changing for now)
 int s1 = 30;    // step pin - useless
 int d1 = 31;    // direction pin - useless
 int c1 = 40;     // chip select pin - useful
+
+// Shoulder motor pins and constants
+int shoulder_PUL = 11
+int shoulder_DIR = 12
+int shoulder_EA = 2
+int shoulder_EB = 3
+int shoulder_steps_per_rev = 200;
+int pd = 1000 * 1000;
+int shoulder_wait = 2;
+int shoulder_encoder_count = 0;
+int shoulder_EA_on = 0;
+int shoulder_EB_on = 0;
+volatile bool shoulder_set_dir = LOW;
 
 volatile int fill_serial_buffer = false;
 volatile int servo_wait = 0;
@@ -54,19 +63,13 @@ volatile int not_tolerant_hand;
 void setup() {
   Serial.begin(9600);   // Serial monitor
 
-  // SERVOS
-  // Setup for servo that controls wrist bend
-  bend_servo.attach(7);  
-  bend_servo.write(0);
-  bend_desired_pos = 10; 
-  
   // Setup for servo that controls wrist spin 
   spin_servo.attach(6);
   spin_servo.write(0);
   spin_desired_pos = 0;
 
   // Elbow stepper motor setup
-  targetAngle[0] = 1;   // max is roughly 135 if zeroed correctly
+  targetAngle[0] = 0;   // max is roughly 135 if zeroed correctly
   pinMode(directionPin[0], OUTPUT);
   pinMode(stepPin[0], OUTPUT);
   encoderTarget[0] = targetAngle[0] * 45.51111 * 360/255;
@@ -76,7 +79,7 @@ void setup() {
   
   // Setup for the servo that controls the hand 
   hand_servo.attach(5);
-  targetAngle[1] = 70;   // Hand encoder setup: 80 is closed and 1 is open
+  targetAngle[1] = 1;   // Hand encoder setup: 80 is closed and 1 is open
   encoderTarget[1] = targetAngle[1] * 45.51111;
   encoderPos[1] = motors[1].encoder.getPositionSPI(14);
   encoderDiff[1] = encoderTarget[1] - encoderPos[1];
@@ -101,6 +104,9 @@ ISR(TIMER1_OVF_vect) {        // ISR to pulse pins of moving motors
   TCNT1 = 65518;              // preload timer to 300 us          
   fill_serial_buffer = true;  // check
   
+  // SHOULDER MOTOR ISR
+  
+
   // ELBOW STEPPER ISR
   not_tolerant_elbow = abs(encoderDiff[0]) > 10 && ((abs(encoderDiff[0]) + 10) < (MAX_ENCODER_VAL + encoderTarget[0])); // 2nd condition to check if 359 degrees is close enough to 0
   if (move[0]) {                            // if motor should move
@@ -130,7 +136,6 @@ ISR(TIMER1_OVF_vect) {        // ISR to pulse pins of moving motors
   // POSITIONAL SERVOS ISR
   servo_wait += 1;
   if (servo_wait == 150) { // used to slow down Servo movement to be more in line with stepper motor
-      positional_servo_ISR(bend_servo, bend_desired_pos);
       positional_servo_ISR(spin_servo, spin_desired_pos);
       servo_wait = 0;   //resets the wait timer
   }
@@ -138,7 +143,6 @@ ISR(TIMER1_OVF_vect) {        // ISR to pulse pins of moving motors
 
 void loop() {
   checkDirLongWay(0);
-  Serial.println(encoderPos[1]);
 }
 
 // Function for updating the position of the Servos in the ISR 
@@ -208,10 +212,3 @@ void redefine_encoder_zero_position(bool rezeroStepper, bool rezeroHand) {
     motors[1].encoder.setZeroSPI(c1);
   }
 }
-
-
-
-
-
-
-
