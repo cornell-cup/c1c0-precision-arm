@@ -1,5 +1,5 @@
-#define driverPUL 11
-#define driverDIR 12
+#define driverPUL 8
+#define driverDIR 10
 #define EB 3
 #define EA 2
 int stepPerRev = 200;
@@ -53,8 +53,6 @@ void setup()
 
 void loop()
 {
-  if (EA == 1) Serial.print('EA high');
-  //Serial.println(encoderCnt);
   digitalWrite(driverDIR, !setdir);
   digitalWrite(driverPUL, HIGH);
   delay(10);

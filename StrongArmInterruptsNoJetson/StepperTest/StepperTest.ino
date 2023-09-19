@@ -16,7 +16,7 @@ int s0 = 8;
 int d0 = 10;
 
 //chip select pins
-int c0 = 9;
+int c0 = 35;
 
 int i = 0; 
 volatile int counter = 0;
@@ -114,7 +114,7 @@ ISR(TIMER1_OVF_vect) //ISR to pulse pins of moving motors
 void loop() {
   Serial.println(motors[0].encoder.getPositionSPI(14));
   Serial.println(encoderTarget[0]);
-  Serial.println(move[0]);
+  // Serial.println(move[0]);
 
   //targetLimit();
   checkDirLongWay(0);

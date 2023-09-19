@@ -22,20 +22,7 @@ int c0 = 35;    // chip select pin (had this on 5, changing for now)
 // Continuous hand encoder pins - step and direction are arbitrary
 int s1 = 30;    // step pin - useless
 int d1 = 31;    // direction pin - useless
-int c1 = 40;     // chip select pin - useful
-
-// Shoulder motor pins and constants
-int shoulder_PUL = 11
-int shoulder_DIR = 12
-int shoulder_EA = 2
-int shoulder_EB = 3
-int shoulder_steps_per_rev = 200;
-int pd = 1000 * 1000;
-int shoulder_wait = 2;
-int shoulder_encoder_count = 0;
-int shoulder_EA_on = 0;
-int shoulder_EB_on = 0;
-volatile bool shoulder_set_dir = LOW;
+int c1 = 4;     // chip select pin - useful
 
 volatile int fill_serial_buffer = false;
 volatile int servo_wait = 0;
@@ -72,8 +59,8 @@ void setup() {
   targetAngle[0] = 0;   // max is roughly 135 if zeroed correctly
   pinMode(directionPin[0], OUTPUT);
   pinMode(stepPin[0], OUTPUT);
-  encoderTarget[0] = targetAngle[0] * 45.51111 * 360/255;
-  encoderPos[0] = motors[0].encoder.getPositionSPI(14);
+  encoderTarget[0] = targetAngle[0] * 45.51111; // * 360/255;
+  encoderPos[0] = motors[0].encoder.getPositionSPI(c0);
   encoderDiff[0] = encoderTarget[0] - encoderPos[0];
   move[0] = 1; 
   
@@ -81,7 +68,7 @@ void setup() {
   hand_servo.attach(5);
   targetAngle[1] = 1;   // Hand encoder setup: 80 is closed and 1 is open
   encoderTarget[1] = targetAngle[1] * 45.51111;
-  encoderPos[1] = motors[1].encoder.getPositionSPI(14);
+  encoderPos[1] = motors[1].encoder.getPositionSPI(c1);
   encoderDiff[1] = encoderTarget[1] - encoderPos[1];
   move[1] = 1; 
 
@@ -104,9 +91,6 @@ ISR(TIMER1_OVF_vect) {        // ISR to pulse pins of moving motors
   TCNT1 = 65518;              // preload timer to 300 us          
   fill_serial_buffer = true;  // check
   
-  // SHOULDER MOTOR ISR
-  
-
   // ELBOW STEPPER ISR
   not_tolerant_elbow = abs(encoderDiff[0]) > 10 && ((abs(encoderDiff[0]) + 10) < (MAX_ENCODER_VAL + encoderTarget[0])); // 2nd condition to check if 359 degrees is close enough to 0
   if (move[0]) {                            // if motor should move
@@ -120,7 +104,7 @@ ISR(TIMER1_OVF_vect) {        // ISR to pulse pins of moving motors
   
   // HAND CONTINUOUS ISR
   cont_wait += 1;
-  if (cont_wait == 100) {
+  if (cont_wait == 50) {
     not_tolerant_hand = abs(encoderDiff[1]) > 10 && ((abs(encoderDiff[1]) + 10) < (MAX_ENCODER_VAL + encoderTarget[1]));
     if (move[1]) { 
       if (not_tolerant_hand) {    // move continuous servo
@@ -143,6 +127,12 @@ ISR(TIMER1_OVF_vect) {        // ISR to pulse pins of moving motors
 
 void loop() {
   checkDirLongWay(0);
+  Serial.print("Elbow Encoder Current Position: ");
+  Serial.println(encoderPos[0]);
+  Serial.print("Hand Encoder Current Position: ");
+  Serial.println(encoderPos[1]);
+  // Serial.print("Hand Encoder Difference: ");
+  // Serial.println(encoderDiff[1]);
 }
 
 // Function for updating the position of the Servos in the ISR 
@@ -161,7 +151,7 @@ void positional_servo_ISR(Servo servo, int desired_pos) {
 
 // Checks that motor is moving in right direction and switches if not
 void checkDirLongWay(int motorNum) { 
-  encoderPos[motorNum] = motors[motorNum].encoder.getPositionSPI(14);
+  encoderPos[motorNum] = motors[motorNum].encoder.getPositionSPI(c0);
   if (encoderPos[motorNum] == 65535){
     move[motorNum] = 0;   // stop moving if encoder reads error message
   }
@@ -181,7 +171,7 @@ void checkDirLongWay(int motorNum) {
 
 void cont_check_dir(int contNum) {
   // 92/93 - zero rotation
-  encoderPos[contNum] = MAX_ENCODER_VAL - motors[contNum].encoder.getPositionSPI(14);
+  encoderPos[contNum] = MAX_ENCODER_VAL - motors[contNum].encoder.getPositionSPI(c1);
   
   if (encoderPos[contNum] == 65535){
     move[contNum] = 0;    // stop moving if encoder reads error message
@@ -206,9 +196,11 @@ void cont_check_dir(int contNum) {
 void redefine_encoder_zero_position(bool rezeroStepper, bool rezeroHand) {
   if (rezeroStepper) {
     motors[0].encoder.setZeroSPI(c0); 
+    move[0] = 0;
   }
 
   if (rezeroHand) {
     motors[1].encoder.setZeroSPI(c1);
+    move[1] = 0;
   }
 }
