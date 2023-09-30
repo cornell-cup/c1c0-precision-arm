@@ -94,7 +94,7 @@ void setup()
     // initialized to something that isn't valid
     targetAngle[i] = 0;
 #define TargetDegreeAngle 90
-    Serial.println(TargetDegreeAngle / 360.0 * gearRatios[5] * STEPS_PER_REV);
+    targetAngle[5] = convertAngle(90, 5);
     targetAngle[3] = convertAngle(90, 3);
 
     //    targetAngle[1] = 80;
@@ -181,6 +181,7 @@ ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
 
 void loop()
 {
+  //Serial.println(stepsTaken[5]);
 #ifdef USING_ENCODER
   Serial.println(motors[1].encoder.getPositionSPI(14));
   Serial.println(encoderTarget[1]);
