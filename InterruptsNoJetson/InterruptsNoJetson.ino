@@ -50,14 +50,16 @@ volatile int state[NUM_MOTORS]; // volatile because changed in ISR
 int reversed[NUM_MOTORS] = {0, 0, 0, 1, 0, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
 
 // Storing encoder values
+#ifdef USING_ENCODER
 volatile float encoderDiff[NUM_MOTORS];   // units of encoder steps
 volatile float encoderTarget[NUM_MOTORS]; // units of encoder steps
 volatile float targetAngle[NUM_MOTORS];   // units of degrees
 float encoderPos[NUM_MOTORS];             // units of encoder steps
-
+#else
 volatile float stepsDiff[NUM_MOTORS]; // units of encoder steps
 volatile int stepsTaken[NUM_MOTORS] = {0};
-volatile int motor_dir[NUM_MOTORS] = {0, 0, 0, 1, 0, 0};
+volatile int motor_dir[NUM_MOTORS] = {0, 0, 0, 0, 0, 0};
+#endif
 
 volatile int nottolerant; // motor not within expected position
 
@@ -149,13 +151,12 @@ ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
 
   for (int i = 0; i < NUM_MOTORS; i++)
   {
-    stepsDiff[i] = targetAngle[i] - stepsTaken[i];
 #ifdef USING_ENCODER
     nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i])); // 2nd condition to check if 359degrees is close enough to 0
-#else - 1
+#else
+    stepsDiff[i] = targetAngle[i] - stepsTaken[i];
     nottolerant = abs(stepsDiff[i]) > 0; // 2nd condition to check if 359degrees is close enough to 0
 #endif
-    // nottolerant = abs(encoderDiff[i]) > 10; // we dont need the extra condition above bc we never pass through zero
     if (move[i])
     { // if motor should move
       if (nottolerant)
@@ -163,6 +164,7 @@ ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
         state[i] = !state[i]; // toggle state
         // Serial.println(stepPin[i]);
         digitalWrite(stepPin[i], state[i]); // write to step pin
+#ifndef USING_ENCODER
         if (state[i] == 1)
         {
           if (motor_dir[i])
@@ -170,6 +172,7 @@ ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
           else
             stepsTaken[i]--;
         }
+#endif
       }
       else
       {
@@ -181,7 +184,7 @@ ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
 
 void loop()
 {
-  //Serial.println(stepsTaken[5]);
+  // Serial.println(stepsTaken[5]);
 #ifdef USING_ENCODER
   Serial.println(motors[1].encoder.getPositionSPI(14));
   Serial.println(encoderTarget[1]);
