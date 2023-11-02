@@ -8,7 +8,7 @@
 // #define USING_ENCODER
 #define NUM_MOTORS 6
 #define STEPS_PER_REV 400
-float gearRatios[NUM_MOTORS] = {20, 50, 50, 14 * 14 / 5, 60.96, 19};
+float gearRatios[NUM_MOTORS] = {20 * 4, 50, 50, 14 * 14 / 5, 60.96, 19};
 
 /* PROBLEMS LIST
   1. DO NOT HAVE TWO MOTORS HAVE SAME DIRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
@@ -50,11 +50,11 @@ volatile int state[NUM_MOTORS]; // volatile because changed in ISR
 int reversed[NUM_MOTORS] = {0, 0, 0, 1, 0, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
 
 // Storing encoder values
-#ifdef USING_ENCODER
 volatile float encoderDiff[NUM_MOTORS];   // units of encoder steps
 volatile float encoderTarget[NUM_MOTORS]; // units of encoder steps
 volatile float targetAngle[NUM_MOTORS];   // units of degrees
 float encoderPos[NUM_MOTORS];             // units of encoder steps
+#ifdef USING_ENCODER
 #else
 volatile float stepsDiff[NUM_MOTORS]; // units of encoder steps
 volatile int stepsTaken[NUM_MOTORS] = {0};
@@ -96,34 +96,19 @@ void setup()
     // initialized to something that isn't valid
     targetAngle[i] = 0;
 #define TargetDegreeAngle 90
-    targetAngle[5] = convertAngle(90, 5);
-    targetAngle[3] = convertAngle(90, 3);
-
-    //    targetAngle[1] = 80;
-    // targetAngle[2] = 200;
-
-    //   targetAngle[1] = 100;
-    //   targetAngle[2] = 90;
-    ////
-    //   targetAngle[1] = 130;
-    //   targetAngle[2] = 40;
-    ////
-    // targetAngle[1] = 80;
-    //   targetAngle[2] = 10;
-
-    //  targetAngle[3] = 300;
-    // targetAngle[4] = 100;
+#define motorJ 1
+    targetAngle[motorJ - 1] = convertAngle(30, motorJ - 1);
 
     pinMode(directionPin[i], OUTPUT); // set direction and step pins as outputs
     pinMode(stepPin[i], OUTPUT);
 
     move[i] = 0; // default is to move none
 
-    // move[0] = 1; // enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-    //  move[1] = 1; // enable j2
-    //      move[2] = 1; // enable j3
+    move[0] = 1; // enable j1 // send move to the jetson and recieve the encoder directions from the jetson
+    move[1] = 1; // enable j2
+    move[2] = 1; // enable j3
     move[3] = 1; // enable j4
-                 //     move[4] = 1; //enable j5
+    move[4] = 1; // enable j5
     move[5] = 1; // enable j6
 
 #ifdef USING_ENCODER
