@@ -21,7 +21,7 @@ uint32_t data_len;
 
 #define MAX_ENCODER_VAL 16383
 #define STEPS_PER_REV 400
-float gearRatios[NUM_MOTORS] = {20, 50, 50, 14 * 14 / 5, 60.96, 19, 1};
+float gearRatios[NUM_MOTORS] = {20, 50, 50, 14 * 14 / 5, 60.96, 19, 100};
 
 // Step (pulse) pins
 int s0 = 49;
@@ -71,7 +71,7 @@ volatile int nottolerant; // motor not within expected position
 void setup()
 {
   Serial.begin(115200);
-  Serial1.begin(115200); // TX/RX with Jetson
+  Serial2.begin(115200); // TX/RX with Jetson
   delay(1000);
   Serial.println("Begin");
   reset_input_buffer();
@@ -113,7 +113,7 @@ ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
         // Write PWM signal for end effector since servo instead of stepper
         if (i == 6)
         {
-          int move_val = (motor_dir[i] == 1) ? 200 : 10;
+          int move_val = (motor_dir[i] == 1) ? 245 : 25;
           Serial.println(move_val);
           analogWrite(stepPin[i], move_val);
           state[i] = 1;
@@ -150,9 +150,10 @@ void loop()
     checkDirLongWay(i);
   }
 
-  if (Serial1.available() > 0)
+  if (Serial2.available() > 0)
   { // Jetson to Arduino
-    Serial1.readBytes(data_buffer, data_buffer_len);
+    Serial.println("Receiving command");
+    Serial2.readBytes(data_buffer, data_buffer_len);
     r2p_decode(data_buffer, data_buffer_len, &checksum, type, data, &data_len);
     convert_b8_to_b16(data, data_final, NUM_MOTORS * 2);
     controlMovement(data_final);
@@ -201,8 +202,8 @@ int convertAngle(float motorAngle, int motorNum)
 
 void reset_input_buffer()
 {
-  while (Serial1.available() > 0)
-    Serial1.read();
+  while (Serial2.available() > 0)
+    Serial2.read();
   delay(100);
 }
 
