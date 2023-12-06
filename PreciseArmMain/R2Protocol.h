@@ -320,4 +320,34 @@ inline void r2pf_read(r2pf_t* fsm, uint8_t read) {
   }
 }
 
+inline void convert_b16_to_b8(volatile uint16_t *databuffer, volatile uint8_t *data, int len) 
+{
+  //  int data_idx1;
+  //  int data_idx2;
+  for (int i = 0; i < 2 * len; i += 2)
+  {
+    data[i] = (databuffer[i / 2] >> 8) & 255;
+    data[i + 1] = (databuffer[i / 2]) & 255;
+  }
+}
+
+inline void convert_b8_to_b16(volatile uint8_t *databuffer, volatile uint16_t *data)
+{
+  int data_idx;
+  for (int i = 0; i < 16; i++)
+  {
+    data_idx = i / 2;
+    if ((i & 1) == 0)
+    {
+      // even
+      data[data_idx] = databuffer[i] << 8;
+    }
+    else
+    {
+      // odd
+      data[data_idx] |= databuffer[i];
+    }
+  }
+}
+
 #endif
