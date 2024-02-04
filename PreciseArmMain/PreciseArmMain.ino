@@ -1,5 +1,4 @@
-#include <MovingSteppersLib.h>
-#include <MotorEncoderLib.h>
+#include "MotorEncoderLib.h"
 #include "R2Protocol.h"
 
 // 10/5/23 ISSUES:
@@ -54,17 +53,15 @@ int endEffectorPin = 13;
 // Storing pins and states for each motor
 int stepPin[NUM_MOTORS] = {s0, s1, s2, s3, s4, s5, endEffectorPin};
 int directionPin[NUM_MOTORS] = {d0, d1, d2, d3, d4, d5, 0};
-int reversed[NUM_MOTORS] = {0};
+int reversed[NUM_MOTORS] = {0, 0, 1, 0, 0, 0, 0};
 volatile int state[NUM_MOTORS] = {0}; // volatile because changed in ISR
 
-int minAngle[NUM_MOTORS] = {0}; // units of degrees
-int maxAngle[NUM_MOTORS] = {160,100,240,360,240,360,50}; // units of degrees
-volatile int targetAngle[NUM_MOTORS] = {0}; // units of degrees
-volatile int stepsDiff[NUM_MOTORS] = {0};   // units of encoder steps
+int minAngle[NUM_MOTORS] = {0};                                // units of degrees
+int maxAngle[NUM_MOTORS] = {160, 100, 240, 360, 240, 360, 50}; // units of degrees
+volatile int targetAngle[NUM_MOTORS] = {0};                    // units of degrees
+volatile int stepsDiff[NUM_MOTORS] = {0};                      // units of encoder steps
 volatile uint16_t stepsTaken[NUM_MOTORS] = {0};
 volatile int motor_dir[NUM_MOTORS] = {0};
-
-
 
 void setup()
 {
@@ -95,39 +92,39 @@ void setup()
 
 ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
 {
-  TCNT1 = 65518;             // preload timer to 300 us
+  TCNT1 = 65518; // preload timer to 300 us
 
   for (int i = 0; i < NUM_MOTORS; i++)
   {
-      if (abs(targetAngle[i] - stepsTaken[i]) > 0)
-      { // if not within tolerance
-        // Write PWM signal for end effector since servo instead of stepper
-        state[i] = !state[i];
-        if (i < 6)
+    if (abs(targetAngle[i] - stepsTaken[i]) > 0)
+    { // if not within tolerance
+      // Write PWM signal for end effector since servo instead of stepper
+      state[i] = !state[i];
+      if (i < 6)
+      {
+        digitalWrite(stepPin[i], state[i]); // write to step pin
+      }
+      else
+      {
+        int move_val = (motor_dir[i] == 1) ? 245 : 25; // write pwm to forward or backward duty cycle
+        analogWrite(stepPin[i], move_val);
+      }
+      if (state[i] == 1)
+      {
+        if (motor_dir[i])
         {
-          digitalWrite(stepPin[i], state[i]); // write to step pin
+          stepsTaken[i]++;
         }
         else
         {
-          int move_val = (motor_dir[i] == 1) ? 245 : 25; //write pwm to forward or backward duty cycle
-          analogWrite(stepPin[i], move_val);
-        }
-        if (state[i] == 1)
-        {
-          if (motor_dir[i])
-          {
-            stepsTaken[i]++;
-          }
-          else
-          {
-            stepsTaken[i]--;
-          }
+          stepsTaken[i]--;
         }
       }
-      else if (i == 6)
-      {
-        analogWrite(stepPin[i], 0);
-      }
+    }
+    else if (i == 6)
+    {
+      analogWrite(stepPin[i], 0);
+    }
   }
 }
 
@@ -142,7 +139,7 @@ void loop()
   { // Jetson to Arduino
     Serial.println("Receiving command");
     Serial2.readBytes(recv_buffer, MAX_BUFFER_SIZE);
-if(r2p_decode(recv_buffer, MAX_BUFFER_SIZE, &checksum, type, data, &data_len))
+    if (r2p_decode(recv_buffer, MAX_BUFFER_SIZE, &checksum, type, data, &data_len))
     {
       Serial.println("message received");
       Serial.println(type);
@@ -157,7 +154,7 @@ if(r2p_decode(recv_buffer, MAX_BUFFER_SIZE, &checksum, type, data, &data_len))
       else if (!strcmp(type, "PRM"))
       {
         Serial.println("angles commanded");
-       
+
         uint16_t data_final[NUM_MOTORS];
         convert_b8_to_b16(data, data_final, DATA_SIZE);
         controlMovement(data_final);
@@ -168,7 +165,7 @@ if(r2p_decode(recv_buffer, MAX_BUFFER_SIZE, &checksum, type, data, &data_len))
 
 void checkDirLongWay(int motorNum)
 { // checks that motor is moving in right direction and switches if not
-  if (abs(targetAngle[motorNum] - stepsTaken[motorNum]) > 0)
+  if (targetAngle[motorNum] - stepsTaken[motorNum] > 0)
   {
     motor_dir[motorNum] = !reversed[motorNum];
   }
@@ -178,7 +175,10 @@ void checkDirLongWay(int motorNum)
   }
   // write direction pin if not using end effector
   if (motorNum != 6)
-    digitalWrite(directionPin[motorNum], motor_dir[motorNum]);
+  {
+    Serial.println(motor_dir[1]);
+  }
+  digitalWrite(directionPin[motorNum], motor_dir[motorNum]);
 }
 
 void convert_b8_to_b16(uint8_t *databuffer, uint16_t *data, int len)
@@ -228,21 +228,25 @@ void controlMovement(uint16_t data[])
 {
   for (int i = 0; i < NUM_MOTORS; i++)
   {
-    int newAngle = AngleToSteps(data[i], i);
-
-    //Clamp angle to max and minimum angles
-    if(newAngle > maxAngle[i])
+    int newAngle = data[i];
+    // Clamp angle to max and minimum angles
+    if (newAngle > maxAngle[i])
       newAngle = maxAngle[i];
-    if(newAngle < minAngle[i])
+    if (newAngle < minAngle[i])
       newAngle = minAngle[i];
+    int newAngleSteps = AngleToSteps(newAngle, i);
 
-    targetAngle[i] = newAngle;
+    targetAngle[i] = newAngleSteps;
 
-    Serial.print(" ");
-    Serial.print(targetAngle[i]);
-    Serial.print("/");
-    Serial.print(stepsTaken[i]);
-    Serial.print(" ");
+    Serial.print("J");
+    Serial.print(i + 1);
+    Serial.print(" target angle: ");
+    Serial.print(data[i]);
+    Serial.print(" Target steps: ");
+    Serial.print(newAngleSteps);
+    // Serial.print(targetAngle[i]);
+    Serial.print(" Current steps:");
+    Serial.println(stepsTaken[i]);
   }
   Serial.println();
 }

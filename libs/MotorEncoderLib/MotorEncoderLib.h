@@ -32,6 +32,7 @@ class MotorEncoderLib
 		void setCSLine(int encoder, int csLine);
 		void setZeroSPI(int encoder);
 		void resetAMT22(int encoder);
+		void stepUsingEncoder();
 		int RES12;
 		int RES14;
         int CS;
@@ -43,6 +44,10 @@ class MotorEncoderLib
 		int AMT22_NOP;
 		int AMT22_RESET;
 		int AMT22_ZERO;
+
+		int Step;
+		int Dir;
+		int Reversed;
 
 };
 
