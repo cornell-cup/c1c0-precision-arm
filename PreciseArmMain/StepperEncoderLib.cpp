@@ -1,38 +1,24 @@
 #include "Arduino.h"
-#include "MovingSteppersLib.h"
+#include "StepperLib.h"
 #include "EncoderLib.h"
 #include <SPI.h>
 
 // Using `` for setup and in movement function - not sure if it's needed
 // but it's possible that it fixed some problems
-MovingSteppersLib::MovingSteppersLib(int stepPinIn, int dirPinIn, int encoderPinIn)
-{
-    // --> setup step and direction pins
-    stepPin = stepPinIn;
-    dirPin  = dirPinIn;
-    encoderPin = encoderPinIn;
-    encoder.setChipSelect(encoderPin);
-    // --> set output mode for pins
-    pinMode(stepPin, OUTPUT);
-    pinMode(dirPin, OUTPUT);
-    prevEncoder = 0.0;
 
+StepperEncoderLib::StepperEncoderLib(int step_pin, int dir_pin, int cs_pin, dir_t positive_dir){
+    this->encoder = EncoderLib();
+    this->encoder.setChipSelect(cs_pin);
+    this->stepper = StepperLib(step_pin, dir_pin, positive_dir);
+    this->prevEncoder = 0.0;
     SPI.setClockDivider(SPI_CLOCK_DIV32);
     SPI.begin();
 }
-
-
-int MovingSteppersLib::move(double curAngle, int flag){
-
-  // --> pass the flag from previous stepper to current stepper
-  // --> don't move if there's a -1 flag raised before it
-  // if (flag == -1) {
-  //   return -1;
-  // }
+int StepperEncoderLib::move(double curAngle, int flag){
 
   // --> convert angle to step count for the stepper
   int encoderTarget = curAngle * 45.51111;
-  int encoderPosition = encoder.getPositionSPI(14); //using encoder library
+  int encoderPosition = this->encoder.getPositionSPI(14);
   int encoderDiff = encoderTarget - encoderPosition;
   // int prevEncoder = encoderPosition;
   int sign = 1;
@@ -40,11 +26,11 @@ int MovingSteppersLib::move(double curAngle, int flag){
 
   // --> set moving direction
   if(encoderDiff > 0){
-      digitalWrite(dirPin, LOW);
+      digitalWrite(dirPin, HIGH);
       sign = 1;
   }
   else{
-      digitalWrite(dirPin, HIGH);
+      digitalWrite(dirPin, LOW);
       sign = -1;
   }
   encoderDiff = sign * encoderDiff;
@@ -66,26 +52,7 @@ int MovingSteppersLib::move(double curAngle, int flag){
       //    attempt = 0;
       //  }
       encoderDiff = encoderTarget - encoderPosition;
-      // prevEncoder = encoderPosition;
 
-      // --> check direction every iteration
-      if(encoderDiff > 0){
-          digitalWrite(dirPin, LOW);
-          sign = 1;
-      }
-      else{
-          digitalWrite(dirPin, HIGH);
-          sign = -1;
-      }
-      encoderDiff = sign * encoderDiff;
-
-      //possible solution to zero crossover problem
-      // if (abs(encoderDiff) > 180) {
-      //     if encoderTarget > encoderPosition
-      //      go clockwise
-      //     else
-      //      go counterclockwise
-      // }
   }
 
   return 1;

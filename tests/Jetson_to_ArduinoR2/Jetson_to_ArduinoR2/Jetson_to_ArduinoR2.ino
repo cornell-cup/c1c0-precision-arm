@@ -1,6 +1,6 @@
 // Jetson to Arduino Communication 
 #include <MovingSteppersLib.h>
-#include <MotorEncoderLib.h>
+#include <EncoderLib.h>
 #include <R2Protocol.h>
 
 //SoftwareSerial mySerial(19,18); // RX, TX

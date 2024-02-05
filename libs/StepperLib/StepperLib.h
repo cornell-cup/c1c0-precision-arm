@@ -2,7 +2,7 @@
 #define MovingSteppersLib_h
 
 #include "Arduino.h"
-#include "MotorEncoderLib.h"
+#include "EncoderLib.h"
 
 class MovingSteppersLib
 {
@@ -13,7 +13,7 @@ class MovingSteppersLib
         int dirPin;
         int encoderPin;
         double prevEncoder;
-        MotorEncoderLib encoder;
+        EncoderLib encoder;
 };
 
 #endif

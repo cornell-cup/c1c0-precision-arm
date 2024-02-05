@@ -1,7 +1,7 @@
 // Interrupt Control for LeArm
 
 // #include <MovingSteppersLib.h>
-// #include <MotorEncoderLib.h>
+// #include <EncoderLib.h>
 #include "R2Protocol.h"
 #include "LobotServoController.h"
 

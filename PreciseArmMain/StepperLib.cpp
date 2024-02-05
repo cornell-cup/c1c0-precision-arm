@@ -1,16 +1,15 @@
-#include "Arduino.h"
 #include "StepperLib.h"
 
 StepperLib::StepperLib(int stepPin, int dirPin, dir_t positive_dir) :
-.stepPin(stepPin),
-.dirPin(dirPin),
-.positive_dir(positive_dir)
+stepPin(stepPin),
+dirPin(dirPin),
+positive_dir(positive_dir),
 
-.currentSteps(0),
-.gearRatio(0),
-.steps_per_rev(0),
+currentSteps(0),
+gearRatio(0),
+steps_per_rev(0),
 
-.currentStepState(0)
+currentStepState(0)
 {
     this->currentDirState = this->positive_dir;
     pinMode(this->stepPin, OUTPUT);
@@ -20,16 +19,18 @@ StepperLib::StepperLib(int stepPin, int dirPin, dir_t positive_dir) :
 }
 
 StepperLib::StepperLib(int stepPin, int dirPin, dir_t positive_dir, float gearRatio, int steps_per_rev)
-    : SteppersLib(stepPin, dirPin, positive_dir), .gearRatio(gearRatio), .steps_per_rev(steps_per_rev)
+    : StepperLib(stepPin, dirPin, positive_dir)
 {
+    this->gearRatio = steps_per_rev;
+    this->steps_per_rev = steps_per_rev;
 }
 
-int StepperLib::AngleToSteps(float motorAngle, int motorNum)
+uint16_t StepperLib::AngleToSteps(float motorAngle)
 {
     return motorAngle / 360.0 * (this->gearRatio * this->steps_per_rev);
 }
 
-float StepperLib::StepsToAngle(int motorSteps)
+float StepperLib::StepsToAngle(uint16_t motorSteps)
 {
     return motorSteps * 360.0 / (this->gearRatio * this->steps_per_rev);
 }
@@ -40,7 +41,7 @@ void StepperLib::step_motor(dir_t dir){
         this->currentDirState = dir;
         digitalWrite(this->dirPin,dir);
     }
-    this->currentStepstate = !this->currentStepState;
+    this->currentStepState = !this->currentStepState;
     digitalWrite(this->stepPin,this->currentStepState);
 }
 

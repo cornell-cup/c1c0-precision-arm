@@ -1,5 +1,5 @@
 #include <MovingSteppersLib.h>
-#include <MotorEncoderLib.h>
+#include <EncoderLib.h>
 
 MovingSteppersLib J3(37, 33, 10);
 //MovingSteppersLib J5(47, 22, 11);

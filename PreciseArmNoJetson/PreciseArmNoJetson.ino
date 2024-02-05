@@ -1,5 +1,5 @@
 #include <MovingSteppersLib.h>
-#include <MotorEncoderLib.h>
+#include <EncoderLib.h>
 // #include <R2Protocol.h>
 
 // This file is used for testing purposes

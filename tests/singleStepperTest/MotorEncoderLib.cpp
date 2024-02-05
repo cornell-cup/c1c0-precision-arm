@@ -6,14 +6,14 @@
 */
 
 #include "Arduino.h"
-#include "MotorEncoderLib.h"
+#include "EncoderLib.h"
 #include <SPI.h>
 
 
 /*
  *  Constructor. Defines pins for MISO, MOSI, SCLK
  */
-MotorEncoderLib::MotorEncoderLib( )
+EncoderLib::EncoderLib( )
 {
   _MISO         = 50;
   _MOSI         = 51;
@@ -30,7 +30,7 @@ MotorEncoderLib::MotorEncoderLib( )
   pinMode( _SCLK, OUTPUT );
 }
 
-void MotorEncoderLib::setChipSelect(int encoderPinIn)
+void EncoderLib::setChipSelect(int encoderPinIn)
 {
     CS = encoderPinIn;
     pinMode(CS, OUTPUT);
@@ -50,7 +50,7 @@ void MotorEncoderLib::setChipSelect(int encoderPinIn)
 
 
  */
-uint16_t MotorEncoderLib::getPositionSPI(int resolution)
+uint16_t EncoderLib::getPositionSPI(int resolution)
 {
   uint16_t currentPosition;       //16-bit response from encoder
   bool binaryArray[16];           //after receiving the position we will populate this array and use it for calculating the checksum
@@ -94,7 +94,7 @@ uint16_t MotorEncoderLib::getPositionSPI(int resolution)
  * This function takes the pin number of the desired device as an input
  * The received data is returned.
  */
-int MotorEncoderLib::spiWriteRead(int sendByte, int encoder, int releaseLine)
+int EncoderLib::spiWriteRead(int sendByte, int encoder, int releaseLine)
 {
   //holder for the received over SPI
   int data;
@@ -119,7 +119,7 @@ int MotorEncoderLib::spiWriteRead(int sendByte, int encoder, int releaseLine)
  * This function sets the state of the SPI line. It isn't necessary but makes the code more readable than having digitalWrite everywhere
  * This function takes the pin number of the desired device as an input
  */
-void MotorEncoderLib::setCSLine (int encoder, int csLine)
+void EncoderLib::setCSLine (int encoder, int csLine)
 {
   digitalWrite(encoder, csLine);
 }
@@ -129,7 +129,7 @@ void MotorEncoderLib::setCSLine (int encoder, int csLine)
  * second byte is the command.
  * This function takes the pin number of the desired device as an input
  */
-void MotorEncoderLib::setZeroSPI(int encoder)
+void EncoderLib::setZeroSPI(int encoder)
 {
   spiWriteRead(AMT22_NOP, encoder, false);
 
@@ -147,7 +147,7 @@ void MotorEncoderLib::setZeroSPI(int encoder)
  * second byte is the command.
  * This function takes the pin number of the desired device as an input
  */
-void MotorEncoderLib::resetAMT22(int encoder)
+void EncoderLib::resetAMT22(int encoder)
 {
   spiWriteRead(AMT22_NOP, encoder, false);
 

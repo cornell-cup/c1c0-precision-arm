@@ -1,4 +1,4 @@
-#include "MotorEncoderLib.h"
+#include "StepperLib.h"
 #include "R2Protocol.h"
 
 // 10/5/23 ISSUES:
@@ -49,7 +49,7 @@ int c5 = 32;
 
 // End effector pin
 int endEffectorPin = 13;
-
+StepperLib J1 = StepperLib(s0,d0,CCW,20,STEPS_PER_REV);
 // Storing pins and states for each motor
 int stepPin[NUM_MOTORS] = {s0, s1, s2, s3, s4, s5, endEffectorPin};
 int directionPin[NUM_MOTORS] = {d0, d1, d2, d3, d4, d5, 0};
