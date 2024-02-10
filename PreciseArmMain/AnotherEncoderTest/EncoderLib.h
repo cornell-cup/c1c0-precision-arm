@@ -17,6 +17,7 @@
 #ifndef EncoderLib_h
 #define EncoderLib_h
 #include "Arduino.h"
+#include <SPI.h>
 class EncoderLib
 {
 public:

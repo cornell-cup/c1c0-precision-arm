@@ -56,6 +56,7 @@ void EncoderLib::setChipSelect(int encoderPinIn)
  */
 uint16_t EncoderLib::getPositionSPI(uint8_t resolution)
 {
+  Serial.println(CS);
   uint16_t currentPosition; // 16-bit response from encoder
   bool binaryArray[16];     // after receiving the position we will populate this array and use it for calculating the checksum
   // get first byte which is the high byte, shift it 8 bits. don't release line for the first byte
@@ -95,14 +96,19 @@ uint8_t EncoderLib::spiWriteRead(uint8_t sendByte, uint8_t encoder, uint8_t rele
 {
   // holder for the received over SPI
   uint8_t data;
+  
   // set cs low, cs may already be low but there's no issue calling it again except for extra time
   setCSLine(encoder, LOW);
+  
   // There is a minimum time requirement after CS goes low before data can be clocked out of the encoder.
   // We will implement that time delay here, however the arduino is not the fastest device so the delay
   // is likely inherently there already
   delayMicroseconds(3);
   // send the command
+  Serial.println("!p");
+  Serial.println(sendByte);
   data = SPI.transfer(sendByte);
+  Serial.println("!Q");
   delayMicroseconds(3);            // There is also a minimum time after clocking that CS should remain asserted before we release it
   setCSLine(encoder, releaseLine); // if releaseLine is high set it high else it stays low
   return data;
@@ -122,12 +128,15 @@ void EncoderLib::setCSLine(uint8_t encoder, uint8_t csLine)
  */
 void EncoderLib::setZeroSPI(uint8_t encoder)
 {
+ 
   spiWriteRead(AMT22_NOP, encoder, false);
+  Serial.print("enter");
   // this is the time required between bytes as specified in the datasheet.
   // We will implement that time delay here, however the arduino is not the fastest device so the delay
   // is likely inherently there already
   delayMicroseconds(3);
   spiWriteRead(AMT22_ZERO, encoder, true);
+   
   delay(250); // 250 millisecond delay to allow the encoder to reset
 }
 /*

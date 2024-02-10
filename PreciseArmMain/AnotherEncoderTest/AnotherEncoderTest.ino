@@ -1,5 +1,6 @@
 #include "EncoderLib.h"
-#define CS_PIN 38
+#include <SPI.h>
+#define CS_PIN 44
 EncoderLib encoder;
 void setup() 
 {
@@ -9,9 +10,9 @@ void setup()
   Serial.println("Beginning test");
 
   encoder = EncoderLib();
-  encoder.setChipSelect(CS_PIN);
+  //encoder.setChipSelect(CS_PIN);
   delay(100);
-  encoder.setZeroSPI(CS_PIN);
+  //encoder.setZeroSPI(CS_PIN);
   Serial.println("Finished setup");
 }
 

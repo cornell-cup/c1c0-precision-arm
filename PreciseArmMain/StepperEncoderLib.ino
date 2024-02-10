@@ -7,7 +7,7 @@
 // but it's possible that it fixed some problems
 
 StepperEncoderLib::StepperEncoderLib(int step_pin, int dir_pin, int cs_pin, dir_t positive_dir){
-    this->encoder = EncoderLib();
+    this->encoder = EncoderLib(50,51,52,44);
     this->encoder.setChipSelect(cs_pin);
     this->stepper = StepperLib(step_pin, dir_pin, positive_dir);
     this->prevEncoder = 0.0;
