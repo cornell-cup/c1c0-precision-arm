@@ -1,5 +1,5 @@
-#include <MovingSteppersLib.h>
-#include <EncoderLib.h>
+#include "MovingSteppersLib.h"
+#include "EncoderLib.h"
 #include "R2Protocol.h"
 
 // use interrupts file for jetson to arduino communicaiton
@@ -74,8 +74,8 @@ void reset_input_buffer()
 
 void setup()
 {
-    Serial.begin(9600); // Baud Rate
-    Serial1.begin(9600);
+    Serial.begin(115200); // Baud Rate
+    Serial1.begin(115200);
 
     Serial.println("Hello World");
     delay(1000);
@@ -121,7 +121,8 @@ void setup()
         // targetAngle[4] = 100;
 
         pinMode(directionPin[i], OUTPUT); // set direction and step pins as outputs
-        pinMode(stepPin[i], OUTPUT);
+        //comment out steppin no move
+        //pinMode(stepPin[i], OUTPUT);
 
         move[i] = 0;                                          // default is to move none
         encoderTarget[i] = targetAngle[i] * 45.51111;         // map degree to encoder steps
@@ -200,6 +201,7 @@ void update_encoder_angles()
 {
     for (k = 0; k < 6; k++)
     {
+      
         encoder_angles[k] = (uint16_t)motors[k].encoder.getPositionSPI(14) / 45.1111; // how to convert to char and how many digits to round to
         // if you get the error message (aka encoder isn't connected), set to zero
         if (encoder_angles[k] == 1452)
@@ -240,12 +242,13 @@ void loop()
     // if (Serial1.available() > 1) {
     //  Serial.println(Serial1.read());
     //}
-    //  Serial.println(motors[0].encoder.getPositionSPI(14));
-    //  Serial.println(motors[1].encoder.getPositionSPI(14));
-    //  Serial.println(motors[2].encoder.getPositionSPI(14));
-    //  Serial.println(motors[3].encoder.getPositionSPI(14));
-    //  Serial.println(motors[4].encoder.getPositionSPI(14));
-    //  Serial.println(motors[5].encoder.getPositionSPI(14));
+    //uncommented this to see what encoders we are getting
+     //Serial.println(motors[0].encoder.getPositionSPI(14));//no work 65535
+     //Serial.println(motors[1].encoder.getPositionSPI(14));//nowork
+     //Serial.println(motors[2].encoder.getPositionSPI(14));//nowork
+     //Serial.println(motors[3].encoder.getPositionSPI(14));//nowork
+     //Serial.println(motors[4].encoder.getPositionSPI(14));//nowokr
+     Serial.println(motors[5].encoder.getPositionSPI(14));
 
     // Jetson to Arduino
 
