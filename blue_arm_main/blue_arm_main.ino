@@ -5,6 +5,24 @@
 #include "R2Protocol.h"
 #include "LobotServoController.h"
 
+typedef enum
+{
+  INIT,
+  DOING_COMMAND
+} arm_state;
+
+arm_state state = INIT;
+
+void normalize_angles(uint16_t *angles)
+{
+  for (int i = 0; i < 6; i++)
+  {
+    if (angles[i] > 270)
+      angles[i] = 90 - (360 - angles[i]);
+    else
+      angles[i] = angles[i] + 90;
+  }
+}
 // use interrupts file for jetson to arduino communicaiton
 
 #define MAX_ENCODER_VAL 16383
@@ -120,7 +138,6 @@ uint8_t send_buf[10];
 int i = 0;
 
 // Jetson to Arduino Set up
-uint8_t do_init = 1;
 uint16_t checksum;
 char type[5];
 uint8_t data[12];
@@ -139,7 +156,7 @@ void reset_input_buffer()
 }
 
 // Arduino to Jetson R2
-uint16_t servo_angles[] = {10, 20, 30, 40, 50, 60};
+uint16_t servo_angles[] = {0, 0, 0, 0, 0, 0};
 // LobotServo servos[6];   //an array of struct LobotServo
 // servos[0].ID = 1;       //No.1 servo
 // servos[0].Position = 0;  //1400 position
@@ -182,14 +199,24 @@ void changeAngles(uint16_t data[])
   // TODO: Call moveServos function for all 6 new joint angles
   // data[] will be 6 elements, call moveservos in each element
   // Position in the array is the joint, value is the angle
-  memcpy(servo_angles,data,12);
+  uint16_t normalized_servo_angles[6];
+
+  normalized_servo_angles[0] = data[0];
+  normalized_servo_angles[1] = data[5];
+  normalized_servo_angles[2] = data[4];
+  normalized_servo_angles[3] = data[3];
+  normalized_servo_angles[4] = data[2];
+  normalized_servo_angles[5] = data[1];
+
   Serial.println("New Angles:");
   for (i = 0; i < 6; i++)
   {
-    Serial.print(String(servo_angles[i]) + " ");
+    Serial.print(String(normalized_servo_angles[i]) + " ");
   }
-  Serial.println();
-  arm.moveServos(6, 1000, 1, J1_deg_to_pos(data[0]), 2, J2_deg_to_pos(data[5]), 3, J3_deg_to_pos(data[4]), 4, J4_deg_to_pos(data[3]), 5, J5_deg_to_pos(data[2]), 6, J6_deg_to_pos(data[1]));
+
+  normalize_angles(normalized_servo_angles);
+
+  arm.moveServos(6, 1000, 1, J1_deg_to_pos(normalized_servo_angles[0]), 2, J2_deg_to_pos(normalized_servo_angles[5]), 3, J3_deg_to_pos(normalized_servo_angles[4]), 4, J4_deg_to_pos(normalized_servo_angles[3]), 5, J5_deg_to_pos(normalized_servo_angles[2]), 6, J6_deg_to_pos(normalized_servo_angles[1]));
   // delay(1000);
 }
 
@@ -216,53 +243,35 @@ void send(char type[5], const uint8_t *data, uint32_t data_len, uint8_t *send_bu
   //   Serial.println();
 }
 
-uint16_t init_data[] = {90,90,90,90, 90, 90};
-
 void loop()
 {
-  if (do_init)
-  {
-    changeAngles(init_data);
-    convert_b16_to_b8(init_data, servo_anglesB8, 6);
-    send("PRMR", servo_anglesB8, 12, send_buffer);
-    delay(1000);
-  }
+  delay(100);
+  changeAngles(servo_angles);
 
   // Jetson to Arduino
-
   if (Serial1.available())
   {
     // Serial.println("Bytes available: " + String(Serial1.available())); //2 serials updated to serial 2
     Serial1.readBytes(receive_buf, 28); // serial update to 2
     // Serial.println(r2p_decode(receive_buf, 256, &checksum, type, data, &data_len));
-    if(r2p_decode(receive_buf, 256, &checksum, type, data, &data_len))
+    if (r2p_decode(receive_buf, 256, &checksum, type, data, &data_len))
     {
       Serial.println("message received");
-      Serial.println(type);
       if (!strcmp(type, "PRMR"))
       {
         Serial.println("current angles requested");
         uint16_t new_data[6] = {};
-        new_data[0] = servo_angles[0];
-        new_data[1] = servo_angles[5];
-        new_data[2] = servo_angles[4];
-        new_data[3] = servo_angles[3];
-        new_data[4] = servo_angles[2];
-        new_data[5] = servo_angles[1];
+
         convert_b16_to_b8(servo_angles, servo_anglesB8, 6);
         send("prm", servo_anglesB8, 12, send_buffer);
         delay(100);
       }
       else if (!strcmp(type, "PRM"))
       {
+        // Receives angles 0-360 degrees
         Serial.println("angles commanded");
 
-        do_init = 0;
-
-       
-        // Serial.println(data[1]);
-        convert_b8_to_b16(data, new_servo_angles);
-        changeAngles(new_servo_angles);
+        convert_b8_to_b16(data, servo_angles);
         Serial.println("Changed angles");
       }
     }
