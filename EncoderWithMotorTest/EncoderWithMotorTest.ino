@@ -45,12 +45,13 @@ int stepPin[NUM_MOTORS] = {s0, s1, s2, s3, s4, s5, endEffectorPin};
 int directionPin[NUM_MOTORS] = {d0, d1, d2, d3, d4, d5, 0};
 int reversed[NUM_MOTORS] = {0};
 volatile int state[NUM_MOTORS] = {0}; // volatile because changed in ISR
-
 int minAngle[NUM_MOTORS] = {0}; // units of degrees
 int maxAngle[NUM_MOTORS] = {160,100,240,360,240,360,50}; // units of degrees
 volatile float targetAngle[NUM_MOTORS] = {0}; // units of degrees
-volatile int stepsDiff[NUM_MOTORS] = {0};   // units of encoder steps encoderDiff[6]
-volatile int encoderTarget[6];              // units of encoder steps
+volatile int encoderStepsDiff[NUM_MOTORS] = {0};   // units of encoder steps encoderDiff[6]
+volatile int encoderTarget[6];  // units of encoder steps
+bool correctPos = false;
+float encoderAngle[6];
 float encoderPos[6];                        // units of encoder steps
 volatile uint16_t stepsTaken[NUM_MOTORS] = {0};
 volatile int motor_dir[NUM_MOTORS] = {0};
@@ -65,20 +66,24 @@ volatile int nottolerant; // motor not within expected position
 void setup()
 {
   Serial.begin(115200); // Baud Rate
-  Serial1.begin(115200);
+  //Serial1.begin(115200);
 
   Serial.println("Hello World");
   delay(1000);
   reset_input_buffer();
 
-    delay(1000);
+  delay(1000);
+
   Serial.println("Precise Arm Begin");
   reset_input_buffer();
+  EncoderLib().setZeroSPI(c1);
+  encoderPos[1] = EncoderLib().getPositionSPI(14);
+  targetAngle[1] = 40;
+  encoderTarget[1] = targetAngle[1]*45.11;
+  Serial.println(encoderTarget[1]);
+  Serial.println(correctPos);
+  delay(1000);
 
-
-  encoderPos[1] = EncoderLib().getPositionSPI(12);
-  encoderTarget[1] = encoderPos[1] + 300;
-  targetAngle[1] = encoderTarget[1] / 45;
   for (int i = 0; i < NUM_MOTORS; i++)
   { 
     pinMode(directionPin[i], OUTPUT); // set direction and step pins as outputs
@@ -121,48 +126,61 @@ void setup()
 ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
 {
   TCNT1 = 65518;             // preload timer to 300 us
-
-  for (int i = 0; i < NUM_MOTORS; i++)
-  {
-      if (encoderPos[1] <= encoderTarget[1] - 50 || encoderPos[1] >= encoderTarget[1]+50)
-      { // if not within tolerance
-        // Write PWM signal for end effector since servo instead of stepper
-        state[i] = !state[i];
-        if (i < 6)
-        {
-          digitalWrite(stepPin[i], state[i]); // write to step pin
-        }
-        else
-        {
-          int move_val = (motor_dir[i] == 1) ? 245 : 25; //write pwm to forward or backward duty cycle
-          analogWrite(stepPin[i], move_val);
-        }
-        if (state[i] == 1)
-        {
-          if (motor_dir[i])
-          {
-            stepsTaken[i]++;
-          }
-          else
-          {
-            stepsTaken[i]--;
-          }
-        }
-      }
-      else if (i == 6)
-      {
-        analogWrite(stepPin[i], 0);
-      }
+  if (correctPos == false)
+  { // if not within tolerance
+    // Write PWM signal for end effector since servo instead of stepper
+    state[1] = !state[1];
+    // if (i < 6)
+    // {
+    digitalWrite(stepPin[1], state[1]); // write to step pin
+    
+    // else
+    // {
+    //   int move_val = (motor_dir[1] == 1) ? 245 : 25; //write pwm to forward or backward duty cycle
+    //   analogWrite(stepPin[1], move_val);
+    // }
+  if (encoderPos[1] < encoderTarget[1]){
+    motor_dir[1] = 1;
+  } else {
+    motor_dir[1] = 0;
   }
+    // if (state[1] == 1)
+    // {
+    //   if (motor_dir[1])
+    //   {
+    //     stepsTaken[1]++;
+    //   }
+    //   else
+    //   {
+    //     stepsTaken[1]--;
+    //   }
+    // }
+  }
+  // else if (i == 6)
+  // {
+  //   analogWrite(stepPin[i], 0);
+  // }
+
 }
 
 void loop(){
-  for (int i = 0; i < 6; i++)
+   
+  encoderPos[1] = EncoderLib().flipEncoder();
+  encoderAngle[1] = encoderPos[1]/45.1;
+  Serial.print("encoder ");
+  Serial.print(" 1: ");
+  Serial.println(encoderPos[1]);
+
+  if (encoderPos[1] >= encoderTarget[1] - 50 && encoderPos[1] <= encoderTarget[1]+50)
   {
-    encoderPos[i] = EncoderLib().getPositionSPI(12);
-    Serial.print("encoder");
-    Serial.print(i + ': ');
-    Serial.println(encoderPos[i]);
+    correctPos = true;
+  }else{
+    correctPos = false;
+  }
+  
+  if (correctPos == true)
+  {
+    Serial.println("CORRECT ANGLE YAYY");
   }
 
   for (int i = 0; i < NUM_MOTORS; i++)

@@ -162,3 +162,13 @@ void EncoderLib::resetAMT22(uint8_t  encoder)
   spiWriteRead(AMT22_RESET, encoder, true);
   delay(250); // 250 second delay to allow the encoder to start back up
 }
+
+float EncoderLib::flipEncoder(void)
+/*
+flips the encoder reading.
+ex. 0 to 360 becomes 360 to 0
+*/
+{
+  float invertedEncoderTick = 16383 - this->getPositionSPI(14);
+  return invertedEncoderTick;
+}
