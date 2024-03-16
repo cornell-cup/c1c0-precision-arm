@@ -19,7 +19,7 @@ EncoderLib::EncoderLib()
   _MISO = 50;
   _MOSI = 51;
   _SCLK = 52;
-  CS = 32;
+  CS = 44;
   /* SPI commands */
   AMT22_NOP = 0x00;
   AMT22_RESET = 0x60;

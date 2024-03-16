@@ -1,6 +1,6 @@
 #include "EncoderLib.h"
 #include <SPI.h>
-#define CS_PIN 44
+#define CS_PIN 32
 EncoderLib encoder;
 void setup() 
 {

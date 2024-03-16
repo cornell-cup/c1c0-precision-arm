@@ -1,5 +1,5 @@
 #include "MovingSteppersLib.h"
-#include "joint.h"
+#include "EncoderLib.h"
 #include "R2Protocol.h"
 
 // use interrupts file for jetson to arduino communicaiton
@@ -32,12 +32,6 @@ int c3 = 38;
 int c4 = 35;
 int c5 = 32;
 
-motor_t J2_motor = {.pulse_pin = 46, .dir_pin = 45};
-
-encoder_t J1_encoder = {.cs = 47, .resolution = 14};
-encoder_t J2_encoder = {.cs = 44, .resolution = 14};
-encoder_t J3_encoder = {.cs = 41, .resolution = 14};
-encoder_t J4_encoder = {.cs = 38, .resolution = 14};
 // SoftwareSerial mySerial(19,18); // RX, TX
 
 uint8_t send_buf[10];
@@ -99,25 +93,13 @@ void setup()
     // send_buf[9] = 253;
 
     // Only uncomment when you want to zero the encoders
-    setZeroSPI(&J2_encoder);
     //  motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
     //  motors[1].encoder.setZeroSPI(c1);     // when J2 motor juts towards me
     //  motors[2].encoder.setZeroSPI(c2);     // zero is at the left
     //  motors[3].encoder.setZeroSPI(c3);
     //  motors[4].encoder.setZeroSPI(c4);
     //  motors[5].encoder.setZeroSPI(c5);
-    init_motor(&J2_motor);
-    Serial.println("lift it man");
-    delay(5000);
-    getPositionSPI(&J2_encoder);
-    while(J2_encoder.current_angle > 330){
-        step_motor(&J2_motor, 1);
-        delay(1);
-        getPositionSPI(&J2_encoder);
-        Serial.println(J2_encoder.current_angle);
-    }
-
-     for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 6; i++)
     { // for each motor
         // initialized to something that isn't valid
         targetAngle[i] = -1; // used for testing, this will be an input from object detection
@@ -176,11 +158,11 @@ ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
             if (nottolerant)
             {                                       // if not within tolerance
                 state[i] = !state[i];               // toggle state
-                //digitalWrite(stepPin[i], state[i]); // write to step pin
+                digitalWrite(stepPin[i], state[i]); // write to step pin
             }
             else
             {
-                //        Serial.println("turn off");
+                       Serial.println("turn off");
                 move[i] = 0; // stop moving motor if location reached
             }
         }
@@ -260,23 +242,26 @@ void loop()
     //  Serial.println(Serial1.read());
     //}
     //uncommented this to see what encoders we are getting
-    // Serial.print("J1: ");
-    //  Serial.println(getPositionSPI(&J1_encoder)); //j1
+    Serial.print("J1: ");
+     Serial.println(motors[0].encoder.getPositionSPI(14)); //j1
      Serial.print("J2: ");
-     getPositionSPI(&J2_encoder);
-     Serial.println(J2_encoder.current_angle); //j1
-    //  Serial.print("J3: ");
-    //  Serial.println(getPositionSPI(&J3_encoder)); //j1
-    //  Serial.print("J4: ");
-    //  Serial.println(getPositionSPI(&J4_encoder)); //j1
+     Serial.println(motors[1].encoder.getPositionSPI(14));//j2
+     Serial.print("J3: ");
+     Serial.println(motors[2].encoder.getPositionSPI(14));//j3
+     Serial.print("J4: ");
+     Serial.println(motors[3].encoder.getPositionSPI(14));//nowork
     //  Serial.println(motors[4].encoder.getPositionSPI(14));//nowokr
     //  Serial.println(motors[5].encoder.getPositionSPI(14));
-
+    data[0] = 3;
+    Serial.println(data[0]);
+    //changeAngles(data);
+    //changeAngles(data);
     // Jetson to Arduino
-
+    /*
+    Serial.println(Serial1.available());
     if (Serial1.available() > 22)
     {
-        // Serial.println("Bytes available: " + String(Serial1.available()));
+        Serial.println("Bytes available: " + String(Serial1.available()));
         // Serial1.readBytes(receive_buf, 256);
         for (i = 0; i < 22; i++)
         {
@@ -297,6 +282,7 @@ void loop()
         // Serial.println(data[1]);
         changeAngles(data);
     }
+    */
 
     // Arduino to Jetson
     // else{
@@ -305,6 +291,10 @@ void loop()
     send("prm", encoder_anglesB8, 12, send_buffer);
     delay(100);
     //}
+}
+
+void movehehe(uint8_t){
+
 }
 
 void changeAngles(uint8_t data[])
@@ -377,3 +367,39 @@ void convert_b16_to_b8(int *databuffer, uint8_t *data, int len)
     }
 }
 
+// void makeSerBuffers(){
+
+// fill_serial_buffer = false;
+// for (int i=0; i<6; i++) {
+//    send_buf[2*i2+] = (motors[i].encoder.getPositionSPI(14) >> 8) & 255;
+//    send_buf[2*i+3] =  motors[i].encoder.getPositionSPI(14) & 255;
+// send_buf[2+i] = move[i];
+//  }
+// delay(500);
+// Serial.println(send_buf[5]);
+// Serial1.flush();
+// Serial1.write(send_buf, sizeof(send_buf));
+//}
+
+// void checkDirThroughZero(int motorNum){ //checks that motor is moving in right direction and switches if not
+//
+//   encoderPos = motors[motorNum].encoder.getPositionSPI(14);
+//   encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos;
+//
+//   if (abs(encoderDiff[motorNum]) >= 8192) { //angle > 180 (encoder units)
+//         if (encoderDiff[motorNum] > 0) {
+//          digitalWrite(directionPin[motorNum], reversed[motorNum]); //J3 Clockwise is LOW
+//         }
+//         else {
+//         digitalWrite(directionPin[motorNum], !reversed[motorNum]);
+//         }
+//    }
+//    else {
+//         if(encoderDiff[motorNum] > 0){
+//             digitalWrite(directionPin[motorNum], !reversed[motorNum]);
+//         }
+//         else {
+//             digitalWrite(directionPin[motorNum], reversed[motorNum]);
+//         }
+//     }
+// }
