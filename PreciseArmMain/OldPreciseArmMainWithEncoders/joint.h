@@ -1,25 +1,7 @@
 
 #include <SPI.h>
-//typedef struct
-//{
-//    uint16_t max_angle;
-//    uint16_t min_angle;
-//    uint16_t current_angle;
-//    motor_t* motor;
-//    encoder_t* encoder;
-//} joint_t;
-//
-//inline void init_motor_encoder_pair(joint_t* joint)
-//{
-//    init_motor(joint->motor);
-//    init_encoder(joint->encoder);
-//    joint->current_angle = getPositionSPI(joint->encoder);
-//}
-//
-//motor_t J1_motor = {.pulse_pin = 1, .dir_pin = 2, .positive_dir, .pulse_state = 0};
-//encoder_t J1_encoder = {.cs = 1, .resolution = 2};
-//joint_t J1 = {.encoder = &J1_encoder, .motor = &J1_motor, .max_angle = 90, .min_angle = 0};
-//
+
+
 typedef struct
 {
     uint16_t pulse_pin;
@@ -56,12 +38,24 @@ typedef struct
 {
     uint16_t cs;
     uint8_t resolution;
+    //0 if when angle goes down when it should be going up
+    //1 if when angle goes up when it should be going up
+    bool correctDir;
+    float target_angle;
+    float max_angle;
+    float min_angle;
     float current_angle;
+
+    
+    bool correctPos;
+    
+    
 } encoder_t;
 
 inline void init_encoder(encoder_t *encoder)
 {
     encoder->current_angle = 0;
+    encoder->correctPos = false;
     pinMode(encoder->cs, OUTPUT);
     pinMode(MISO, INPUT);
     pinMode(MOSI, OUTPUT);
@@ -155,7 +149,44 @@ inline void getPositionSPI(encoder_t *encoder)
     float current_angle = currentPosition / (45.51111);
     //sometimes values spike so this is to only take good values, didn't work tho so commented out
     //if(abs(current_angle - encoder->current_angle) < ANGLE_TOLERANCE)
+    if(encoder->correctDir){
+      
+      if(current_angle > 180 && current_angle < 360){
+        encoder->current_angle = current_angle - 360;
+      }
+      else{
         encoder->current_angle = current_angle;
+      }
+    }
+    else{
+      //dc if want >180 and < 360 or <= >=
+      if(current_angle > 180 && current_angle < 360){
+        encoder->current_angle = 360 - current_angle;
+      }
+      //if current_angle is < 180
+      else{
+        encoder->current_angle = -1*current_angle;
+        //encoder->current_angle -= 2*current_angle;
+      }
+    }
+   
+        
 }
+
+// typedef struct
+// {
+//    uint16_t max_angle;
+//    uint16_t min_angle;
+//    uint16_t current_angle;
+//    motor_t* motor;
+//    encoder_t* encoder;
+// } joint_t;
+
+// inline void init_motor_encoder_pair(joint_t* joint)
+// {
+//    init_motor(joint->motor);
+//    init_encoder(joint->encoder);
+//    joint->current_angle = joint->encoder->current_angle;
+// }
 
 
