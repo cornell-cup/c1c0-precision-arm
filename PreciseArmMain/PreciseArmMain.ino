@@ -24,18 +24,18 @@ uint32_t data_len;
 #define STEPS_PER_REV 400
 float gearRatios[NUM_MOTORS] = {20, 50, 50, 14 * 14 / 5, 60.96, 19, 100};
 
-// Step (pulse) pins
+// Step (pulse) pins - blue wires
 int s0 = 49;
-int s1 = 24;
-int s2 = 46;
-int s3 = 40; // changed from 40
+int s1 = 46;
+int s2 = 43;
+int s3 = 40; 
 int s4 = 37;
 int s5 = 34;
 
-// Direction pins
+// Direction pins - yellow wires
 int d0 = 48;
-int d1 = 42;
-int d2 = 45;
+int d1 = 45;
+int d2 = 42;
 int d3 = 39;
 int d4 = 36;
 int d5 = 33;
