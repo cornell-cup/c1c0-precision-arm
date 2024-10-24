@@ -42,7 +42,7 @@ int d5 = 33;
 
 // Chip select pins
 int c0 = 47;
-int c1 = 9;
+int c1 = 44;
 int c2 = 41;
 int c3 = 38;
 int c4 = 35;

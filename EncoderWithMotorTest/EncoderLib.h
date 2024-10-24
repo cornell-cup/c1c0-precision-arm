@@ -25,6 +25,7 @@ public:
   //void setChipSelect(int encoderPinIn);
   uint16_t getPositionSPI(uint8_t resolution);
   uint8_t spiWriteRead(uint8_t sendByte, uint8_t encoder, uint8_t releaseLine);
+  void setChipSelect(int encoderPinIn);
   void setCSLine(uint8_t encoder, uint8_t csLine);
   float flipEncoder();
   void setZeroSPI(uint8_t encoder);

@@ -43,6 +43,7 @@ int endEffectorPin = 13;
 // Storing pins and states for each motor
 int stepPin[NUM_MOTORS] = {s0, s1, s2, s3, s4, s5, endEffectorPin};
 int directionPin[NUM_MOTORS] = {d0, d1, d2, d3, d4, d5, 0};
+int csPin[NUM_MOTORS] = {c0, c1, c2, c3, c4, c5, 0};
 int reversed[NUM_MOTORS] = {0};
 volatile int state[NUM_MOTORS] = {0}; // volatile because changed in ISR
 int minAngle[NUM_MOTORS] = {0}; // units of degrees
@@ -50,7 +51,7 @@ int maxAngle[NUM_MOTORS] = {160,100,240,360,240,360,50}; // units of degrees
 volatile float targetAngle[NUM_MOTORS] = {0}; // units of degrees
 volatile int encoderStepsDiff[NUM_MOTORS] = {0};   // units of encoder steps encoderDiff[6]
 volatile int encoderTarget[6];  // units of encoder steps
-bool correctPos = false;
+volatile bool correctPos = false;
 float encoderAngle[6];
 float encoderPos[6];                        // units of encoder steps
 volatile uint16_t stepsTaken[NUM_MOTORS] = {0};
@@ -67,9 +68,6 @@ void setup()
 {
   Serial.begin(115200); // Baud Rate
   //Serial1.begin(115200);
-
-  Serial.println("Hello World");
-  delay(1000);
   reset_input_buffer();
 
   delay(1000);
@@ -99,16 +97,18 @@ void setup()
 
     // Only uncomment when you want to zero the encoders
 
-  //motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
-  //motors[1].encoder.setZeroSPI(c1);     // when J2 motor juts towards me
-  //motors[2].encoder.setZeroSPI(c2);     // zero is at the left
-  //motors[3].encoder.setZeroSPI(c3);
-  //motors[4].encoder.setZeroSPI(c4);
-  //motors[5].encoder.setZeroSPI(c5);
+  // motors[0].encoder.setZeroSPI(c0); // zero the encoder at desired position
+  // motors[1].encoder.setZeroSPI(c1);     // when J2 motor juts towards me
+  // motors[2].encoder.setZeroSPI(c2);     // zero is at the left
+  // motors[3].encoder.setZeroSPI(c3);
+  // motors[4].encoder.setZeroSPI(c4);
+  // motors[5].encoder.setZeroSPI(c5);
   for (int i = 0; i < 6; i++)
   { 
       pinMode(directionPin[i], OUTPUT); // set direction and step pins as outputs
       // calculate difference between target and current
+      EncoderLib().setChipSelect(csPin[i]);
+      EncoderLib().setZeroSPI(csPin[i]);
   }
   // initialize interrupt timer1
   noInterrupts(); // disable all interrupts
@@ -126,94 +126,89 @@ void setup()
 ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
 {
   TCNT1 = 65518;             // preload timer to 300 us
-  if (correctPos == false)
-  { // if not within tolerance
-    // Write PWM signal for end effector since servo instead of stepper
-    state[1] = !state[1];
-    // if (i < 6)
-    // {
-    digitalWrite(stepPin[1], state[1]); // write to step pin
-    
-    // else
-    // {
-    //   int move_val = (motor_dir[1] == 1) ? 245 : 25; //write pwm to forward or backward duty cycle
-    //   analogWrite(stepPin[1], move_val);
-    // }
-  if (encoderPos[1] < encoderTarget[1]){
-    motor_dir[1] = 1;
-  } else {
-    motor_dir[1] = 0;
-  }
-    // if (state[1] == 1)
-    // {
-    //   if (motor_dir[1])
-    //   {
-    //     stepsTaken[1]++;
-    //   }
-    //   else
-    //   {
-    //     stepsTaken[1]--;
-    //   }
-    // }
-  }
-  // else if (i == 6)
-  // {
-  //   analogWrite(stepPin[i], 0);
-  // }
+//   for (int i = 0; i < NUM_MOTORS; i++) {
+//     if (correctPos == false) { // if not within tolerance
+//       // Write PWM signal for end effector since servo instead of stepper
+//       state[i] = !state[i];
+//       // if (i < 6)
+//       // {
+//       digitalWrite(stepPin[1], state[1]); // write to step pin
+      
+//       // else
+//       // {
+//       //   int move_val = (motor_dir[1] == 1) ? 245 : 25; //write pwm to forward or backward duty cycle
+//       //   analogWrite(stepPin[1], move_val);
+//       // }
+//     if (encoderPos[i] < encoderTarget[i]){
+//       motor_dir[i] = 1;
+//     } else {
+//       motor_dir[i] = 0;
+//     }
 
+//   }
+// }
 }
 
-void loop(){
-   
-  encoderPos[1] = EncoderLib().flipEncoder();
-  encoderAngle[1] = encoderPos[1]/45.1;
-  Serial.print("encoder ");
-  Serial.print(" 1: ");
-  Serial.println(encoderPos[1]);
-
-  if (encoderPos[1] >= encoderTarget[1] - 50 && encoderPos[1] <= encoderTarget[1]+50)
+void encoder_debug(int i) {
+  EncoderLib().setChipSelect(csPin[i]);
+  EncoderLib().flipEncoder();
+  encoderPos[i] = EncoderLib().getPositionSPI(14);
+  encoderAngle[i] = encoderPos[i]/45.1;
+  Serial.print("encoder J");
+  Serial.print(i+1);
+  Serial.print(": ");
+  Serial.println(encoderPos[i]);
+  
+  if (encoderPos[i] >= encoderTarget[i] - 50 && encoderPos[i] <= encoderTarget[i]+50)
   {
     correctPos = true;
   }else{
     correctPos = false;
   }
   
-  if (correctPos == true)
-  {
-    Serial.println("CORRECT ANGLE YAYY");
-  }
+  // if (correctPos == true)
+  // {
+  //   Serial.println("CORRECT ANGLE YAYY");
+  // }
+}
 
-  for (int i = 0; i < NUM_MOTORS; i++)
-  {
-    checkDirLongWay(i);
-  }
+void loop(){
 
-  if (Serial2.available() > 0)
-  { // Jetson to Arduino
-    Serial.println("Receiving command");
-    Serial2.readBytes(recv_buffer, MAX_BUFFER_SIZE);
-  if(r2p_decode(recv_buffer, MAX_BUFFER_SIZE, &checksum, type, data, &data_len))
-    {
-      Serial.println("message received");
-      Serial.println(type);
-      if (!strcmp(type, "PRMR"))
-      {
-        Serial.println("current angles requested");
-        uint16_t new_data[6] = {};
-        uint8_t stepsTakenB8[DATA_SIZE];
-        convert_b16_to_b8(stepsTaken, stepsTakenB8, NUM_MOTORS);
-        send("prm", stepsTakenB8, DATA_SIZE, send_buffer);
-      }
-      else if (!strcmp(type, "PRM"))
-      {
-        Serial.println("angles commanded");
+  // for (int i = 0; i < NUM_MOTORS-1; i++)
+  // {
+  //   encoder_debug(i);
+  //   // checkDirLongWay(i);
+  // }
+  encoder_debug(2-1);
+  Serial.println("");
+  delay(3);
+
+  // if (Serial2.available() > 0)
+  // { // Jetson to Arduino
+  //   Serial.println("Receiving command");
+  //   Serial2.readBytes(recv_buffer, MAX_BUFFER_SIZE);
+  // if(r2p_decode(recv_buffer, MAX_BUFFER_SIZE, &checksum, type, data, &data_len))
+  //   {
+  //     Serial.println("message received");
+  //     Serial.println(type);
+  //     if (!strcmp(type, "PRMR"))
+  //     {
+  //       Serial.println("current angles requested");
+  //       uint16_t new_data[6] = {};
+  //       uint8_t stepsTakenB8[DATA_SIZE];
+  //       convert_b16_to_b8(stepsTaken, stepsTakenB8, NUM_MOTORS);
+  //       send("prm", stepsTakenB8, DATA_SIZE, send_buffer);
+  //     }
+  //     else if (!strcmp(type, "PRM"))
+  //     {
+  //       Serial.println("angles commanded");
        
-        uint16_t data_final[NUM_MOTORS];
-        convert_b8_to_b16(data, data_final, DATA_SIZE);
-        controlMovement(data_final);
-      }
-    }
-  }
+  //       uint16_t data_final[NUM_MOTORS];
+  //       convert_b8_to_b16(data, data_final, DATA_SIZE);
+  //       controlMovement(data_final);
+  //     }
+  //   }
+  // }
 }
 
 void checkDirLongWay(int motorNum)
@@ -257,15 +252,6 @@ inline void send(char type[5], const uint8_t *data, uint32_t data_len, uint8_t *
   Serial.println("NUMBER OF BYTES WRITTEN! READ ME " + String(written));
 }
 
-// int AngleToSteps(float motorAngle, int motorNum)
-// {
-//   return motorAngle / 360.0 * gearRatios[motorNum] * STEPS_PER_REV;
-// }
-
-// float StepsToAngle(int motorSteps, int motorNum)
-// {
-//   return motorSteps * 360.0 / (gearRatios[motorNum] * STEPS_PER_REV);
-// }
 
 void reset_input_buffer()
 {

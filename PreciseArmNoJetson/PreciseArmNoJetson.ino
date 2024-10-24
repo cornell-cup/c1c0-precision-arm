@@ -5,7 +5,7 @@
 // This file is used for testing purposes
 // You manually set the target angles in the setup() instead of reading values from object detection
 #define MAX_ENCODER_VAL 16383
-// #define USING_ENCODER
+#define USING_ENCODER
 #define NUM_MOTORS 6
 #define STEPS_PER_REV 400
 float gearRatios[NUM_MOTORS] = {20 * 4, 50, 50, 14 * 14 / 5, 60.96, 19};
@@ -17,21 +17,21 @@ float gearRatios[NUM_MOTORS] = {20 * 4, 50, 50, 14 * 14 / 5, 60.96, 19};
 
 // step (pulse) pins
 int s0 = 49;
-int s1 = 8;
+int s1 = 46;
 int s2 = 43;
 int s3 = 40;
 int s4 = 37;
 int s5 = 34;
 // direction pins
 int d0 = 48;
-int d1 = 10;
+int d1 = 45;
 int d2 = 42;
 int d3 = 39;
 int d4 = 36;
 int d5 = 33;
 // chip select pins
 int c0 = 47;
-int c1 = 9;
+int c1 = 44;
 int c2 = 41;
 int c3 = 38;
 int c4 = 35;
@@ -58,8 +58,8 @@ float encoderPos[NUM_MOTORS];             // units of encoder steps
 #else
 volatile float stepsDiff[NUM_MOTORS]; // units of encoder steps
 volatile int stepsTaken[NUM_MOTORS] = {0};
-volatile int motor_dir[NUM_MOTORS] = {0, 0, 0, 0, 0, 0};
 #endif
+volatile int motor_dir[NUM_MOTORS] = {0, 0, 0, 0, 0, 0};
 
 volatile int nottolerant; // motor not within expected position
 
@@ -83,8 +83,8 @@ void setup()
   reset_input_buffer();
 
 // Only uncomment when you want to zero the encoders
-//  motors[0].encoder.setZeroSPI(c0);
 #ifdef USING_ENCODER
+  motors[0].encoder.setZeroSPI(c0);
   motors[1].encoder.setZeroSPI(c1);
 //  motors[2].encoder.setZeroSPI(c2);
 //  motors[3].encoder.setZeroSPI(c3);
@@ -167,12 +167,23 @@ ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
   }
 }
 
+void debug_encoder(int i) {
+  Serial.print("Encoder J");
+  Serial.print(i+1);
+  Serial.print(": ");
+  Serial.println(motors[i].encoder.getPositionSPI(14));
+}
+
 void loop()
 {
   // Serial.println(stepsTaken[5]);
 #ifdef USING_ENCODER
-  Serial.println(motors[1].encoder.getPositionSPI(14));
-  Serial.println(encoderTarget[1]);
+  // for (int i=0; i<6; i++) {
+  //   debug_encoder(i);
+  //   // Serial.println(encoderTarget[i]);
+  // }
+  debug_encoder(0);
+  Serial.println("");
 #endif
   // Serial.println(stepsTaken[1]);
   for (int i = 0; i < NUM_MOTORS; i++)

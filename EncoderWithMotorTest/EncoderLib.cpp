@@ -13,7 +13,7 @@
  */
 EncoderLib::EncoderLib()
 {
-
+  static int CS;
   //later j pass in
   /* SPI pins */
   _MISO = 50;
@@ -46,14 +46,13 @@ EncoderLib::EncoderLib()
   //start SPI bus
   SPI.begin();
 }
-/*
+
 void EncoderLib::setChipSelect(int encoderPinIn)
 {
   CS = encoderPinIn;
   pinMode(CS, OUTPUT);
- 
   
-}*/
+}
 /*
  * This function gets the absolute position from the AMT22 encoder using the SPI bus. The AMT22 position includes 2 checkbits to use
  * for position verification. Both 12-bit and 14-bit encoders transfer position via two bytes, giving 16-bits regardless of resolution.
@@ -76,6 +75,7 @@ uint16_t EncoderLib::getPositionSPI(uint8_t resolution)
   // We will implement that time delay here, however the arduino is not the fastest device so the delay
   // is likely inherantly there already
   delayMicroseconds(3);
+  // Serial.println(CS);
   // OR the low byte with the currentPosition variable. release line after second byte
   currentPosition |= spiWriteRead(AMT22_NOP, CS, true);
   // run through the 16 bits of position and put each bit into a slot in the array so we can do the checksum calculation
@@ -129,6 +129,7 @@ void EncoderLib::setCSLine(uint8_t encoder, uint8_t csLine)
 {
   digitalWrite(encoder, csLine);
 }
+
 /*
  * The AMT22 bus allows for extended commands. The first byte is 0x00 like a normal position transfer, but the
  * second byte is the command.
@@ -136,9 +137,9 @@ void EncoderLib::setCSLine(uint8_t encoder, uint8_t csLine)
  */
 void EncoderLib::setZeroSPI(uint8_t encoder)
 {
- 
+  Serial.print(CS);
   spiWriteRead(AMT22_NOP, encoder, false);
-  Serial.print("enter");
+  // Serial.print("enter");
   // this is the time required between bytes as specified in the datasheet.
   // We will implement that time delay here, however the arduino is not the fastest device so the delay
   // is likely inherently there already
