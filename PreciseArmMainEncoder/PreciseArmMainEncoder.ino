@@ -1,19 +1,31 @@
 #include <MovingSteppersLib.h>
 #include <MotorEncoderLib.h>
-// #include <R2Protocol.h>
-
-// This file is used for testing purposes
-// You manually set the target angles in the setup() instead of reading values from object detection
-#define MAX_ENCODER_VAL 16383
-#define USING_ENCODER
-#define NUM_MOTORS 6
-#define STEPS_PER_REV 400
-float gearRatios[NUM_MOTORS] = {20 * 4, 50, 50, 14 * 14 / 5, 60.96, 19};
+#include "R2Protocol.h"
 
 /* PROBLEMS LIST
   1. DO NOT HAVE TWO MOTORS HAVE SAME DIRECTION OR STEP PINS AS ANOTHER MOTOR EVERRRRR IT MESSES UP CODE
 */
 // J4 rotates great until it gets to 90 degrees
+
+// This file is used for testing purposes
+// You manually set the target angles in the setup() instead of reading values from object detection
+
+// R2Protocol Definitions
+// Jetson to Arduino r2p decode constants
+#define NUM_MOTORS 6
+#define DATA_SIZE (NUM_MOTORS * 2)
+#define MAX_BUFFER_SIZE (R2P_HEADER_SIZE + DATA_SIZE)
+uint8_t recv_buffer[MAX_BUFFER_SIZE];
+uint8_t send_buffer[MAX_BUFFER_SIZE];
+uint16_t checksum;
+char type[5];
+uint8_t data[DATA_SIZE];
+uint32_t data_len;
+
+#define DEBUG
+#define MAX_ENCODER_VAL 16383
+#define STEPS_PER_REV 400
+float gearRatios[NUM_MOTORS] = {20 * 4, 50, 50, 14 * 14 / 5, 60.96, 19};
 
 // step (pulse) pins
 int s0 = 49;
@@ -48,18 +60,13 @@ volatile int move[NUM_MOTORS];  // volatile because changed in ISR
 volatile int state[NUM_MOTORS]; // volatile because changed in ISR
 
 int reversed[NUM_MOTORS] = {0, 0, 0, 1, 0, 0}; // motors that have encoders facing the wrong way must pick direction changes slightly differently (opposite of normal)
+int flip_encoder[NUM_MOTORS] = {0, 1, 0, 0, 0, 0}
 
 // Storing encoder values
 volatile float encoderDiff[NUM_MOTORS];   // units of encoder steps
 volatile float encoderTarget[NUM_MOTORS]; // units of encoder steps
 volatile float targetAngle[NUM_MOTORS];   // units of degrees
 float encoderPos[NUM_MOTORS];             // units of encoder steps
-#ifdef USING_ENCODER
-#else
-volatile float stepsDiff[NUM_MOTORS]; // units of encoder steps
-volatile int stepsTaken[NUM_MOTORS] = {0};
-#endif
-volatile int motor_dir[NUM_MOTORS] = {0, 0, 0, 0, 0, 0};
 
 volatile int nottolerant; // motor not within expected position
 
@@ -70,52 +77,51 @@ int convertAngle(float motorAngle, int motorNum)
 
 void reset_input_buffer()
 {
-  while (Serial1.available() > 0)
-    Serial1.read();
+  while (Serial2.available() > 0)
+    Serial2.read();
   delay(100);
 }
 
 void setup()
 {
   Serial.begin(115200); // Baud Rate
-  Serial1.begin(115200);
+  Serial2.begin(115200);
   delay(1000);
   reset_input_buffer();
 
 // Only uncomment when you want to zero the encoders
-//  motors[0].encoder.setZeroSPI(c0);
-#ifdef USING_ENCODER
-  motors[1].encoder.setZeroSPI(c1);
-//  motors[2].encoder.setZeroSPI(c2);
-//  motors[3].encoder.setZeroSPI(c3);
-//  motors[4].encoder.setZeroSPI(c4);
-//  motors[5].encoder.setZeroSPI(c5);
-#endif
+  // motors[0].encoder.setZeroSPI(c0); // Zero J1
+  motors[1].encoder.setZeroSPI(c1); // Zero J2
+  // motors[2].encoder.setZeroSPI(c2); // Zero J3
+  // motors[3].encoder.setZeroSPI(c3); // Zero J4
+  // motors[4].encoder.setZeroSPI(c4); // Zero J5
+  // motors[5].encoder.setZeroSPI(c5); // Zero J6
+
   for (int i = 0; i < NUM_MOTORS; i++)
   { // for each motor
     // initialized to something that isn't valid
     targetAngle[i] = 0;
-#define TargetDegreeAngle 90
+
+// Modify below to change motor and target angle
+#define TargetDegreeAngle 30
 #define motorJ 2
-    targetAngle[motorJ - 1] = convertAngle(30, motorJ - 1);
+    targetAngle[motorJ - 1] = TargetDegreeAngle;
 
     pinMode(directionPin[i], OUTPUT); // set direction and step pins as outputs
     pinMode(stepPin[i], OUTPUT);
 
     move[i] = 0; // default is to move none
 
-    move[0] = 1; // enable j1 // send move to the jetson and recieve the encoder directions from the jetson
-    move[1] = 1; // enable j2
+    move[0] = 0; // enable j1 
+    move[1] = 0; // enable j2
     move[2] = 1; // enable j3
-    move[3] = 1; // enable j4
-    move[4] = 1; // enable j5
-    move[5] = 1; // enable j6
+    move[3] = 0; // enable j4
+    move[4] = 0; // enable j5
+    move[5] = 0; // enable j6
 
-#ifdef USING_ENCODER
     encoderTarget[i] = targetAngle[i] * 45.51111;         // map degree to encoder steps
     encoderPos[i] = motors[i].encoder.getPositionSPI(14); // get starting encoder position
     encoderDiff[i] = encoderTarget[i] - encoderPos[i];    // calculate difference between target and current
-#endif
   }
 
   // initialize interrupt timer1
@@ -136,28 +142,13 @@ ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
 
   for (int i = 0; i < NUM_MOTORS; i++)
   {
-#ifdef USING_ENCODER
-    nottolerant = abs(encoderDiff[i]) > 10 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i])); // 2nd condition to check if 359degrees is close enough to 0
-#else
-    stepsDiff[i] = targetAngle[i] - stepsTaken[i];
-    nottolerant = abs(stepsDiff[i]) > 0; // 2nd condition to check if 359degrees is close enough to 0
-#endif
+    nottolerant = abs(encoderDiff[i]) > 100 && ((abs(encoderDiff[i]) + 10) < (MAX_ENCODER_VAL + encoderTarget[i])); // 2nd condition to check if 359degrees is close enough to 0
     if (move[i])
     { // if motor should move
       if (nottolerant)
       {                       // if not within tolerance
         state[i] = !state[i]; // toggle state
-        // Serial.println(stepPin[i]);
         digitalWrite(stepPin[i], state[i]); // write to step pin
-#ifndef USING_ENCODER
-        if (state[i] == 1)
-        {
-          if (motor_dir[i])
-            stepsTaken[i]++;
-          else
-            stepsTaken[i]--;
-        }
-#endif
       }
       else
       {
@@ -169,30 +160,66 @@ ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
 
 void loop()
 {
-  // Serial.println(stepsTaken[5]);
-#ifdef USING_ENCODER
-  Serial.println(motors[1].encoder.getPositionSPI(14));
-  Serial.println(encoderTarget[1]);
+#ifdef DEBUG
+  Serial.print("Motor J");
+  Serial.println(motorJ);
+  Serial.print("Encoder Position: ");
+  Serial.println(encoderPos[motorJ-1]);
+  Serial.print("Target: ");
+  Serial.println(encoderTarget[motorJ-1]);
+  Serial.print("Encoder Diff: ");
+  Serial.println(encoderDiff[motorJ-1]);
+  Serial.println("");
 #endif
-  // Serial.println(stepsTaken[1]);
+  
   for (int i = 0; i < NUM_MOTORS; i++)
   {
-    checkDirLongWay(i);
+    checkDirLongWay(i, flip_encoder);
   }
   // delay(2500);
+
+  // R2P Communication Code - Jetson to Arduino
+  if (Serial2.available() > 0)
+  { 
+    Serial.println("Receiving command");
+    Serial2.readBytes(recv_buffer, MAX_BUFFER_SIZE);
+    if (r2p_decode(recv_buffer, MAX_BUFFER_SIZE, &checksum, type, data, &data_len))
+    {
+      Serial.println("message received");
+      Serial.println(type);
+      if (!strcmp(type, "PRMR"))
+      {
+        // Serial.println("current angles requested");
+        // uint16_t new_data[6] = {};
+        // uint8_t stepsTakenB8[DATA_SIZE];
+        // convert_b16_to_b8(stepsTaken, stepsTakenB8, NUM_MOTORS);
+        // send("prm", stepsTakenB8, DATA_SIZE, send_buffer);
+      }
+      else if (!strcmp(type, "PRM"))
+      {
+        Serial.println("angles commanded");
+
+        // uint16_t data_final[NUM_MOTORS];
+        // convert_b8_to_b16(data, data_final, DATA_SIZE);
+        // controlMovement(data_final);
+      }
+    }
+  }
 }
 
-void checkDirLongWay(int motorNum)
+void checkDirLongWay(int motorNum, int flip=0)
 { // checks that motor is moving in right direction and switches if not
-
-#ifdef USING_ENCODER
-  encoderPos[motorNum] = motors[motorNum].encoder.getPositionSPI(14);
+  if (flip) {
+    encoderPos[motorNum] = MAX_ENCODER_VAL - motors[motorNum].encoder.getPositionSPI(14);
+  } else {
+    encoderPos[motorNum] = motors[motorNum].encoder.getPositionSPI(14);
+  }
   if (encoderPos[motorNum] == 65535)
   {
     move[motorNum] = 0; // stop moving if encoder reads error message
   }
 
-  if ((MAX_ENCODER_VAL - 1000) < encoderPos[motorNum])
+  if ((MAX_ENCODER_VAL - 300) < encoderPos[motorNum])
   { // if motor goes past zero incorrectly, we want to make sure it moves back in the correct direction
     encoderPos[motorNum] = 0;
   }
@@ -200,17 +227,11 @@ void checkDirLongWay(int motorNum)
   encoderDiff[motorNum] = encoderTarget[motorNum] - encoderPos[motorNum];
 
   if (encoderDiff[motorNum] > 0)
-#else
-  stepsDiff[i] = targetAngle[i] - stepsTaken[i];
-  if (stepsDiff[motorNum] > 0)
-#endif
   {
     digitalWrite(directionPin[motorNum], !reversed[motorNum]);
-    motor_dir[motorNum] = !reversed[motorNum];
   }
   else
   {
     digitalWrite(directionPin[motorNum], reversed[motorNum]);
-    motor_dir[motorNum] = reversed[motorNum];
   }
 }
