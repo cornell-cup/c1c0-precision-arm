@@ -12,7 +12,7 @@ int encoderCnt = 0;
 int stepPins[] = {49, 46, 43, 40, 37, 34};
 
 // Direction pins - yellow
-int dirPins[] = {48, 45, 42, 39, 36, 33};
+int dirPins[] = {48, 45, 42, 39, 36, 6};
 
 // Chip select pins
 int chipSelectPins[] = {47, 44, 41, 38, 35, 32};

@@ -167,7 +167,7 @@ inline void getPositionSPI(encoder_t *encoder)
     }        
 }
 
-inline void setTargetAngle(encoder_t *encoder, uint8_t angle) {
+inline void setTargetAngle(encoder_t *encoder, int8_t angle) {
   if ((encoder->min_angle) <= (angle) <= (encoder->max_angle)){
     encoder->target_angle = angle;
   }

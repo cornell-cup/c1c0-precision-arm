@@ -34,9 +34,9 @@ int c5 = 32;
 
 int motorIndex;
 int input;
-bool moving[] = {false, false, false, false, false, false};
+volatile bool moving[] = {false, false, false, false, false, false};
 
-int8_t data_angles[] = {0,0,0,0,0,0};
+static int8_t data_angles[] = {0,0,0,0,0,0};
 
 motor_t motors1[] = {{.pulse_pin = s0, .dir_pin = d0},
                      {.pulse_pin = s1, .dir_pin = d1},
@@ -75,7 +75,7 @@ uint8_t recv_buffer[MAX_BUFFER_SIZE];
 uint8_t send_buffer[MAX_BUFFER_SIZE];
 uint16_t checksum;
 char type[5];
-uint8_t data[DATA_SIZE];
+int8_t data[DATA_SIZE];
 uint32_t data_len;
 
 volatile int counter = 0;
@@ -98,6 +98,8 @@ float encoderPos[6];             // units of encoder steps
 
 volatile int nottolerant; // motor not within expected position
 
+volatile int wait;
+
 void reset_input_buffer()
 {
     while (Serial1.available() > 0)
@@ -113,14 +115,12 @@ void setup()
     delay(1000);
     reset_input_buffer();
 
-    // Only uncomment when you want to zero the encoders
-    Serial.println("setting 0");
-
-    //todo no hard code range
-    for(int i = 0; i < 6; i++){
-      setZeroSPI(&encoders[i]);
-    }
-    Serial.println("set 0");
+    //Only uncomment when you want to zero the encoders
+    // Serial.println("setting 0");
+    // for(int i = 0; i < 6; i++){
+    //   setZeroSPI(&encoders[i]);
+    // } 
+    //setZeroSPI(&encoders[3]);
 
     for (int i = 0 ; i < sizeof(motors1) ; i++){
       init_motor(&motors1[i]);
@@ -138,6 +138,11 @@ void setup()
     interrupts();           // enable all interrupts
 
     Serial.println("Exited setup");
+
+    data_angles[0] = 0;
+    data_angles[1] = 0;
+    changeAngles(data_angles);
+
 }
 
 ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
@@ -148,48 +153,19 @@ ISR(TIMER1_OVF_vect) // ISR to pulse pins of moving motors
     //worry about multiple encoders later, mayb put JX_encoder.correctPos in an array
     for (int i = 0; i < 6; i++)
     {
-      // getPositionSPI(&encoders[i]);
-      if(!encoders[i].correctPos){
-        //if target angle greater then move up, otherwise move down 
-        //todo later can flip > based on .correctDir
-        if(encoders[i].correctDir){
-          step_motor(&motors1[i], encoders[i].target_angle < encoders[i].current_angle);
-        }
-        else{
-            step_motor(&motors1[i], encoders[i].target_angle > encoders[i].current_angle);
-        }
-      } 
-    }
-}
-
-void update_encoder_angles()
-{
-    for (k = 0; k < 6; k++)
-    {
-        encoder_angles[k] = (uint16_t)motors[k].encoder.getPositionSPI(14) / 45.1111; // how to convert to char and how many digits to round to
-        // if you get the error message (aka encoder isn't connected), set to zero
-        if (encoder_angles[k] == 1452)
-        {
-            encoder_angles[k] = 0;
-        }
-    }
-}
-
-void send(char type[5], const uint8_t *data, uint32_t data_len, uint8_t *send_buffer)
-{
-    uint32_t written = r2p_encode(type, data, data_len, send_buffer, 256);
-    Serial1.write(send_buffer, written);
-    // Serial.println("Bytes written: " + String(written));
-    for (int i = 0; i < data_len; i++)
-    {
-        // Serial.println(data[i]);
-    }
+      if(encoders[i].current_angle >= encoders[i].target_angle - 5  && encoders[i].current_angle <= encoders[i].target_angle + 5){
+        encoders[i].correctPos = 1;
+        moving[i] = false;
+      }
+      else{
+        encoders[i].correctPos = 0;
+        moving[i] = true;
+      }
+  }
 }
 
 void loop()
 {
-
-
   // ---------------------------------------------------------------------------------------------
   // Manual Keyboard Control
   // ---------------------------------------------------------------------------------------------
@@ -199,19 +175,13 @@ void loop()
     // Select motor based on input (e.g., "j1", "j2", etc.)
     if ((inputStr.startsWith("j") || inputStr.startsWith("J")) && inputStr.length() == 2) {
       motorIndex = inputStr[1] - '0' - 1;  // Get motor number from string (e.g., '0' to '5')
-      //Serial.println(motorIndex);
-      //moving[motorIndex] = true;
       Serial.print("Input received from J");
       Serial.println(motorIndex + 1);
     }
     else{
       input = inputStr.toInt();
-      Serial.print("Input received from J");
-      setTargetAngle(&encoders[motorIndex], input);
-      getPositionSPI(&encoders[motorIndex]);
-      Serial.print(motorIndex + 1);
-      Serial.print(": ");
-      Serial.println(encoders[motorIndex].target_angle);
+      data_angles[motorIndex] = input;
+      changeAngles(data_angles);
     }
     // switched kill code to 99
     if (inputStr.length() == 0 || inputStr == "99" || input >= 180 || input <= -180) {
@@ -222,29 +192,19 @@ void loop()
     } 
   }
 
-  // ---------------------------------------------------------------------------------------------
-  // Motor Move/Direction Determination Code
-  // ---------------------------------------------------------------------------------------------
-  // Check motor moving conditions
-  for(int i = 0; i < 6; i ++) {
-    if(encoders[i].current_angle >= encoders[i].target_angle - 5  && encoders[i].current_angle <= encoders[i].target_angle + 5){
-      encoders[i].correctPos = 1;
-      moving[i] = false;
-    }
-    else{
-      encoders[i].correctPos = 0;
-      moving[i] = true;
-    }
-  }
+  //Encoder debugging
+  // for (int i=3; i<4; i++){
+  //   getPositionSPI(&encoders[i]);
+  //   Serial.print("Encoder ");
+  //   Serial.print(i+1);
+  //   Serial.print(": ");
+  //   Serial.print(encoders[i].current_angle);
+  //   Serial.println("");
+  //   delay(100);
+  // }
+  // Serial.println("");
 
-  if (moving[motorIndex]){
-    Serial.print("current J");
-    encoders[motorIndex].target_angle = input;
-    getPositionSPI(&encoders[motorIndex]);
-    Serial.print(motorIndex + 1);
-    Serial.print(": ");
-    Serial.println(encoders[motorIndex].current_angle);
-  }
+
 
 
   // ---------------------------------------------------------------------------------------------
@@ -266,42 +226,35 @@ void loop()
         int ind = 0;
         for (int i = 1; i < data_len; i=i+2)
         {
-          Serial.print("J");
-          Serial.print(ind+1);
-          Serial.print(" Angle: ");
-          Serial.println(data[i]);
           data_angles[ind] = data[i];
           ind++;
         }
-        // TODO: function to change angles based on input array
         changeAngles(data_angles);
       }
     }
   }
 }
 
-void changeAngles(uint8_t data[])
+void changeAngles(int8_t *data)
 {
-    for (int i = 0; i < 3; i++)
-    {
-      if (encoders[i].target_angle != data[i]) {
-        Serial.print("Target ");
-        Serial.println(data[i]);
-        Serial.print("Current: ");
-        Serial.println(encoders[i].current_angle);
-        setTargetAngle(&encoders[i], data[i]);
-        getPositionSPI(&encoders[i]);
-        moving[i] = true;
-        encoders[i].correctPos = 0;
+  for (int i = 1; i < 3; i++)
+  {
+    setTargetAngle(&encoders[i], data[i]);
+    getPositionSPI(&encoders[i]);
+
+    while (encoders[i].correctPos != 1) {
+      if(encoders[i].correctDir){
+        step_motor(&motors1[i], encoders[i].target_angle < encoders[i].current_angle);
       }
-        // if (targetAngle[i] != data[i])
-        // {
-        //     targetAngle[i] = data[i];
-        //     encoderTarget[i] = targetAngle[i] * 45.51111 * 360 / 255;
-        //     encoderPos[i] = motors[i].encoder.getPositionSPI(14);
-        //     encoderDiff[i] = encoderTarget[i] - encoderPos[i];
-        //     move[i] = 1;
-        // }
+      else{
+        step_motor(&motors1[i], encoders[i].target_angle > encoders[i].current_angle);
+      }
+      getPositionSPI(&encoders[i]);
+      delayMicroseconds(100);
     }
+
+    // Serial.println(encoders[i].target_angle);
+    // Serial.println(encoders[i].current_angle);
+  }
 }
 
